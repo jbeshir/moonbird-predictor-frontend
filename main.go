@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +15,19 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/ml/v1"
 )
+
+var indexTemplate = template.Must(template.New("index").Parse(
+`<html>
+<body>
+<h1>Moonbird Predictor</h1>
+<form id="prediction-series-input" action="/">
+	<div>Input a comma-separated series of human-assigned probabilties to get Moonbird Predictor's best guess at the likelihood of the event happening. Slightly outperforms naive averaging in validation against PredictionBook data!</div>
+	<input type="text" placeholder="Probabilities go here..." name="assignments" value="{{.AssignmentsStr}}"></input>
+</form>
+{{if .Err}}<div id="prediction-error">Unable to predict using given sequence! Error was: {{.Err}}</div>{{end}}
+{{if .Prediction}}<div id="prediction-result-msg">Predicted likelihood: <span id="prediction-result">{{.Prediction}}</span>!</div>{{end}}
+</body>
+</html>`))
 
 func main() {
 	port := os.Getenv("PORT")
@@ -28,24 +42,42 @@ func main() {
 func handle(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
+	var prediction *float64
+	var err error
+
 	var assignments [][1]float64
-	assignmentsStr := strings.Split(r.FormValue("assignments"), ",")
-	for _, assignmentStr := range assignmentsStr {
-		assignment, err := strconv.ParseFloat(assignmentStr, 64)
+	assignmentStrs := strings.Split(r.FormValue("assignments"), ",")
+	for _, assignmentStr := range assignmentStrs {
+		if assignmentStr == "" {
+			continue
+		}
+
+		var assignment float64
+		assignment, err = strconv.ParseFloat(assignmentStr, 64)
 		if err != nil {
-			fmt.Fprintln(w, err)
-			return
+			break
 		}
 
 		assignments = append(assignments, [1]float64{assignment})
 	}
 
-	data, err := makePrediction(ctx, assignments)
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
+	if err == nil && len(assignments) > 0 {
+		var p float64
+		p, err = makePrediction(ctx, assignments)
+		if err == nil {
+			prediction = &p
+		}
 	}
-	fmt.Fprintln(w, data)
+
+	indexTemplate.Execute(w, &struct {
+		AssignmentsStr string
+		Prediction *float64
+		Err        error
+	} {
+		AssignmentsStr: r.FormValue("assignments"),
+		Prediction: prediction,
+		Err: err,
+	})
 }
 
 type request struct {
