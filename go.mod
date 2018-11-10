@@ -7,5 +7,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20181106182150-f42d05182288
 	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
 	google.golang.org/api v0.0.0-20181108001712-cfbc873f6b93
-	google.golang.org/appengine v1.3.0 // indirect
+	google.golang.org/appengine v1.3.0
 )

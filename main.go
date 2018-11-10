@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/json"
-	"fmt"
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/memcache"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -40,16 +42,16 @@ func main() {
 	}
 
 	http.HandleFunc("/", handle)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	appengine.Main()
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
-	ctx := context.Background()
+	ctx := appengine.NewContext(r)
 
 	var prediction *float64
 	var err error
 
-	var assignments [][1]float64
+	var assignments []float64
 	assignmentStrs := strings.Split(r.FormValue("assignments"), ",")
 	for _, assignmentStr := range assignmentStrs {
 		if assignmentStr == "" {
@@ -57,12 +59,12 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var assignment float64
-		assignment, err = strconv.ParseFloat(assignmentStr, 64)
+		assignment, err = strconv.ParseFloat(strings.TrimSpace(assignmentStr), 64)
 		if err != nil {
 			break
 		}
 
-		assignments = append(assignments, [1]float64{assignment})
+		assignments = append(assignments, assignment)
 	}
 
 	if err == nil && len(assignments) > 0 {
@@ -99,7 +101,14 @@ type resultPrediction struct {
 	Income []float64 `json:"income"`
 }
 
-func makePrediction(ctx context.Context, predictions [][1]float64) (float64, error) {
+func makePrediction(ctx context.Context, predictions []float64) (p float64, err error) {
+
+	cacheKey := generatePredictionCacheKey(predictions)
+	_, err = binaryMemcacheCodec.Get(ctx, cacheKey, &p)
+	if err == nil {
+		return
+	}
+
 	client, err := google.DefaultClient(ctx, ml.CloudPlatformScope)
 	if err != nil {
 		return 0, errors.Wrap(err, "makePrediction couldn't create client")
@@ -132,22 +141,32 @@ func makePrediction(ctx context.Context, predictions [][1]float64) (float64, err
 	if len(result.Predictions) != 1 || len(result.Predictions[0].Income) != 1 {
 		return 0, errors.New("makePrediction got malformed predict response: Did not get one and only one probability")
 	}
+	p = result.Predictions[0].Income[0]
 
-	return result.Predictions[0].Income[0], nil
+	// We ignore failures in writing to memcache.
+	cacheItem := &memcache.Item{
+		Key:    cacheKey,
+		Object: &p,
+	}
+	binaryMemcacheCodec.Set(ctx, cacheItem)
+
+	return
 }
 
-func newMLRequest(predictions [][1]float64) (*ml.GoogleCloudMlV1__PredictRequest, error) {
+func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, error) {
 
+	var predictionsMatrix [][1]float64
 	for _, p := range predictions {
-		if p[0] < 0 || p[0] > 1 {
-			return nil, errors.Errorf("Probability assignment out of range: %g", p[0])
+		if p < 0 || p > 1 {
+			return nil, errors.Errorf("Probability assignment out of range: %g", p)
 		}
+		predictionsMatrix = append(predictionsMatrix, [1]float64{p})
 	}
 
 	jsonreq := request{
 		Instances: []requestInput{
 			{
-				Input: predictions,
+				Input: predictionsMatrix,
 			},
 		},
 	}
@@ -168,4 +187,32 @@ func newMLRequest(predictions [][1]float64) (*ml.GoogleCloudMlV1__PredictRequest
 	req.HttpBody.ContentType = "application/json"
 
 	return &req, nil
+}
+
+func generatePredictionCacheKey(predictions []float64) string {
+	var buf strings.Builder
+	for _, p := range predictions {
+		binary.Write(&buf, binary.BigEndian, p)
+	}
+	return buf.String()
+}
+
+var binaryMemcacheCodec = memcache.Codec{
+	Marshal:   binaryMarshal,
+	Unmarshal: binaryUnmarshal,
+}
+
+// Can only marshal fixed-size data as defined by the encoding/binary package.
+func binaryMarshal(v interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, v)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// Can only unmarshal fixed-size data as defined by the encoding/binary package.
+func binaryUnmarshal(data []byte, v interface{}) error {
+	return binary.Read(bytes.NewReader(data), binary.BigEndian, v)
 }
