@@ -46,10 +46,11 @@ func main() {
 }
 
 func handle(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-
 	var prediction *float64
 	var err error
+
+	ctx := appengine.NewContext(r)
+	ctx, err = appengine.Namespace(ctx, "moonbird-predictor-frontend")
 
 	var assignments []float64
 	assignmentStrs := strings.Split(r.FormValue("assignments"), ",")
