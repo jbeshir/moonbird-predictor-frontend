@@ -1,0 +1,5 @@
+cron:
+- description: "update table of recent prediction book predictions"
+  url: /cron/pb-update
+  target: predictor-frontend
+  schedule: every 24 hours

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"google.golang.org/appengine"
 	"html/template"
 	"math"
@@ -25,6 +26,7 @@ var indexTemplate = template.Must(template.New("index").Parse(
 {{if .Prediction}}<div class="prediction-result-msg"><div class="prediction-result-title">Predicted Likelihood</div><div class="prediction-result">{{.Prediction}}</div></div>{{end}}
 </form>
 {{if .ExampleList}}<div class="example-list">{{.ExampleList}}<div>{{end}}
+{{if .ExampleListErr}}<div class="example-list-fault-msg">{{.ExampleListErr}}<div>{{end}}
 </body>
 </html>`))
 
@@ -35,6 +37,7 @@ func main() {
 	}
 
 	http.HandleFunc("/", handle)
+	http.HandleFunc("/cron/pb-update", cronPbUpdate)
 	appengine.Main()
 }
 
@@ -72,7 +75,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	var exampleList strings.Builder
 	latest, listErr := getLatestPredictionBook(ctx)
 	if listErr == nil {
-		for _, summary := range latest.Summaries {
+		for i := range latest.Summaries {
+			summary := &latest.Summaries[i]
 			var assignments []float64
 			for _, r := range latest.Responses {
 				if r.Prediction != summary.Id {
@@ -95,19 +99,36 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			}
 			exampleList.WriteString(" ")
 		}
-	} else {
-		err = listErr
 	}
 
 	indexTemplate.Execute(w, &struct {
 		AssignmentsStr string
 		Prediction     *float64
-		ExampleList    string
 		Err            error
+		ExampleList    string
+		ExampleListErr error
 	}{
 		AssignmentsStr: r.FormValue("assignments"),
 		Prediction:     prediction,
-		ExampleList:    exampleList.String(),
 		Err:            err,
+		ExampleList:    exampleList.String(),
+		ExampleListErr: listErr,
 	})
+}
+
+func cronPbUpdate(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	ctx, err := appengine.Namespace(ctx, "moonbird-predictor-frontend")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %s", err.Error()), 500)
+		return
+	}
+
+	_, err = updateLatestPredictionBook(ctx)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error: %s", err.Error()), 500)
+		return
+	}
+
+	w.Write([]byte("Done"))
 }
