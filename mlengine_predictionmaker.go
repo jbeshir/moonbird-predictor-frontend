@@ -13,22 +13,9 @@ import (
 	"strings"
 )
 
-type request struct {
-	Instances []requestInput `json:"instances"`
-}
-type requestInput struct {
-	Input [][1]float64 `json:"input"`
-}
+type MLEnginePredictionMaker struct{}
 
-type result struct {
-	Predictions []resultPrediction `json:"predictions"`
-}
-
-type resultPrediction struct {
-	Income []float64 `json:"income"`
-}
-
-func makePrediction(ctx context.Context, predictions []float64) (p float64, err error) {
+func (_ *MLEnginePredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
 
 	cacheKey := generatePredictionCacheKey(predictions)
 	_, err = binaryMemcacheCodec.Get(ctx, cacheKey, &p)
@@ -78,6 +65,21 @@ func makePrediction(ctx context.Context, predictions []float64) (p float64, err 
 	binaryMemcacheCodec.Set(ctx, cacheItem)
 
 	return
+}
+
+type request struct {
+	Instances []requestInput `json:"instances"`
+}
+type requestInput struct {
+	Input [][1]float64 `json:"input"`
+}
+
+type result struct {
+	Predictions []resultPrediction `json:"predictions"`
+}
+
+type resultPrediction struct {
+	Income []float64 `json:"income"`
 }
 
 func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, error) {

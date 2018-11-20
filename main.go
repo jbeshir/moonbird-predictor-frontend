@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/jbeshir/moonbird-predictor-frontend/controllers"
 	"google.golang.org/appengine"
 	"html/template"
-	"math"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 )
 
 var indexTemplate = template.Must(template.New("index").Parse(
@@ -22,8 +20,8 @@ var indexTemplate = template.Must(template.New("index").Parse(
 <form id="prediction-form" action="/">
 	<div>Input a comma-separated series of human-assigned probabilties to get Moonbird Predictor's best guess at the likelihood of the event happening. Slightly outperforms naive averaging in validation against PredictionBook data!</div>
 	<input type="text" placeholder="Probabilities go here..." name="assignments" value="{{.AssignmentsStr}}" class="prediction-text-input"></input>
-{{if .Err}}<div class="prediction-fault-msg">Fault predicting using given sequence!<div id="prediction-fault">{{.Err}}</div></div>{{end}}
 {{if .Prediction}}<div class="prediction-result-msg"><div class="prediction-result-title">Predicted Likelihood</div><div class="prediction-result">{{.Prediction}}</div></div>{{end}}
+{{if .PredictionErr}}<div class="prediction-fault-msg">Fault predicting using given sequence!<div id="prediction-fault">{{.PredictionErr}}</div></div>{{end}}
 </form>
 {{if .ExampleList}}<div class="example-list">{{.ExampleList}}<div>{{end}}
 {{if .ExampleListErr}}<div class="example-list-fault-msg">{{.ExampleListErr}}<div>{{end}}
@@ -36,84 +34,25 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", handle)
+	indexController := controllers.Index{
+		LatestPredictionLister: &PredictionBookLister{},
+		PredictionMaker:        &MLEnginePredictionMaker{},
+	}
+	http.Handle("/", indexController.HandleFunc(&AppEngineContextMaker{}, &WebIndexResponder{}))
+
 	http.HandleFunc("/cron/pb-update", cronPbUpdate)
+
 	appengine.Main()
 }
 
-func handle(w http.ResponseWriter, r *http.Request) {
-	var prediction *float64
-	var err error
+type WebIndexResponder struct{}
 
-	ctx := appengine.NewContext(r)
-	ctx, err = appengine.Namespace(ctx, "moonbird-predictor-frontend")
+func (_ *WebIndexResponder) OnContextError(w http.ResponseWriter, err error) {
+	http.Error(w, "Internal Server Error", 500)
+}
 
-	var assignments []float64
-	assignmentStrs := strings.Split(r.FormValue("assignments"), ",")
-	for _, assignmentStr := range assignmentStrs {
-		if assignmentStr == "" {
-			continue
-		}
-
-		var assignment float64
-		assignment, err = strconv.ParseFloat(strings.TrimSpace(assignmentStr), 64)
-		if err != nil {
-			break
-		}
-
-		assignments = append(assignments, assignment)
-	}
-
-	if err == nil && len(assignments) > 0 {
-		var p float64
-		p, err = makePrediction(ctx, assignments)
-		if err == nil {
-			prediction = &p
-		}
-	}
-
-	var exampleList strings.Builder
-	latest, listErr := getLatestPredictionBook(ctx)
-	if listErr == nil {
-		for i := range latest.Summaries {
-			summary := &latest.Summaries[i]
-			var assignments []float64
-			for _, r := range latest.Responses {
-				if r.Prediction != summary.Id {
-					continue
-				}
-				if math.IsNaN(r.Confidence) {
-					continue
-				}
-
-				assignments = append(assignments, r.Confidence)
-			}
-
-			exampleList.WriteString(strconv.FormatInt(summary.Id, 10))
-			examplePrediction, err := makePrediction(ctx, assignments)
-			exampleList.WriteString(":")
-			if err == nil {
-				exampleList.WriteString(strconv.FormatFloat(examplePrediction, 'g', 4, 64))
-			} else {
-				exampleList.WriteString(err.Error())
-			}
-			exampleList.WriteString(" ")
-		}
-	}
-
-	indexTemplate.Execute(w, &struct {
-		AssignmentsStr string
-		Prediction     *float64
-		Err            error
-		ExampleList    string
-		ExampleListErr error
-	}{
-		AssignmentsStr: r.FormValue("assignments"),
-		Prediction:     prediction,
-		Err:            err,
-		ExampleList:    exampleList.String(),
-		ExampleListErr: listErr,
-	})
+func (_ *WebIndexResponder) OnResult(w http.ResponseWriter, r *controllers.IndexResult) {
+	indexTemplate.Execute(w, r)
 }
 
 func cronPbUpdate(w http.ResponseWriter, r *http.Request) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/controllers"
 	"github.com/jbeshir/predictionbook-extractor/htmlfetcher"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"golang.org/x/time/rate"
@@ -11,17 +12,15 @@ import (
 )
 
 var pbFetcher = htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2)
+
 const memcachePbLatestKey = "pb_latest"
 const datastorePbLatestKey = "pb_latest"
 
-type PredictionBookLatest struct {
-	Summaries []predictions.PredictionSummary
-	Responses []predictions.PredictionResponse
-}
+type PredictionBookLister struct{}
 
-func getLatestPredictionBook(ctx context.Context) (*PredictionBookLatest, error) {
+func (_ *PredictionBookLister) GetLatest(ctx context.Context) (*controllers.LatestPredictions, error) {
 
-	latest := new(PredictionBookLatest)
+	latest := new(controllers.LatestPredictions)
 	_, err := memcache.JSON.Get(ctx, memcachePbLatestKey, &latest)
 	if err == nil {
 		predictionBookJsonPostprocess(latest)
@@ -46,7 +45,7 @@ func getLatestPredictionBook(ctx context.Context) (*PredictionBookLatest, error)
 	return latest, nil
 }
 
-func updateLatestPredictionBook(ctx context.Context) (*PredictionBookLatest, error) {
+func updateLatestPredictionBook(ctx context.Context) (*controllers.LatestPredictions, error) {
 
 	s := predictions.NewSource(pbFetcher, "https://predictionbook.com")
 	summaries, _, err := s.RetrievePredictionListPage(ctx, 1)
@@ -59,7 +58,7 @@ func updateLatestPredictionBook(ctx context.Context) (*PredictionBookLatest, err
 		return nil, err
 	}
 
-	latest := new(PredictionBookLatest)
+	latest := new(controllers.LatestPredictions)
 	latest.Summaries = make([]predictions.PredictionSummary, len(summaries))
 	for i := range summaries {
 		latest.Summaries[i] = *summaries[i]
@@ -81,7 +80,7 @@ func updateLatestPredictionBook(ctx context.Context) (*PredictionBookLatest, err
 	return latest, nil
 }
 
-func predictionBookJsonPostprocess(latest *PredictionBookLatest) {
+func predictionBookJsonPostprocess(latest *controllers.LatestPredictions) {
 	for i := range latest.Responses {
 		if latest.Responses[i].Confidence == -1 {
 			latest.Responses[i].Confidence = math.NaN()
@@ -89,7 +88,7 @@ func predictionBookJsonPostprocess(latest *PredictionBookLatest) {
 	}
 }
 
-func predictionBookJsonPreprocess(latest *PredictionBookLatest) {
+func predictionBookJsonPreprocess(latest *controllers.LatestPredictions) {
 	for i := range latest.Responses {
 		if math.IsNaN(latest.Responses[i].Confidence) {
 			latest.Responses[i].Confidence = -1
@@ -97,7 +96,7 @@ func predictionBookJsonPreprocess(latest *PredictionBookLatest) {
 	}
 }
 
-func predictionBookCompact(latest *PredictionBookLatest) {
+func predictionBookCompact(latest *controllers.LatestPredictions) {
 	// We don't use any of this data for predicting, so discard it to shrink the entity size.
 	for i := range latest.Responses {
 		latest.Responses[i].User = ""
