@@ -9,8 +9,8 @@ import (
 )
 
 type Index struct {
-	PredictionMaker        PredictionMaker
-	LatestPredictionLister LatestPredictionLister
+	PredictionMaker PredictionMaker
+	ExampleLister   ExampleLister
 }
 
 type IndexInput struct {
@@ -74,7 +74,7 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 	}
 
 	var exampleList strings.Builder
-	latest, listErr := c.LatestPredictionLister.GetLatest(ctx)
+	latest, listErr := c.ExampleLister.GetExamples(ctx)
 	if listErr == nil {
 		for i := range latest.Summaries {
 			summary := &latest.Summaries[i]

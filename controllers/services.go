@@ -14,11 +14,12 @@ type PredictionMaker interface {
 	Predict(ctx context.Context, predictions []float64) (p float64, err error)
 }
 
-type LatestPredictions struct {
+type ExamplePredictions struct {
 	Summaries []predictions.PredictionSummary
 	Responses []predictions.PredictionResponse
 }
 
-type LatestPredictionLister interface {
-	GetLatest(ctx context.Context) (*LatestPredictions, error)
+type ExampleLister interface {
+	GetExamples(ctx context.Context) (*ExamplePredictions, error)
+	UpdateExamples(ctx context.Context) (*ExamplePredictions, error)
 }
