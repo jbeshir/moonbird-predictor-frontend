@@ -1,36 +1,36 @@
-package main
+package mlclient
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/ml/v1"
-	"google.golang.org/appengine/memcache"
 	"net/http"
 	"strings"
 )
 
-type MLEnginePredictionMaker struct{}
+type PredictionMaker struct {
+	CacheStorage    CacheStorage
+	HttpClientMaker HttpClientMaker
+}
 
-func (_ *MLEnginePredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
+func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
 
 	cacheKey := generatePredictionCacheKey(predictions)
-	_, err = binaryMemcacheCodec.Get(ctx, cacheKey, &p)
+	err = pm.CacheStorage.Get(ctx, cacheKey, &p)
 	if err == nil {
 		return
-	}
-
-	client, err := google.DefaultClient(ctx, ml.CloudPlatformScope)
-	if err != nil {
-		return 0, errors.Wrap(err, "makePrediction couldn't create client")
 	}
 
 	req, err := newMLRequest(predictions)
 	if err != nil {
 		return 0, errors.Wrap(err, "makePrediction couldn't create request")
+	}
+
+	client, err := pm.HttpClientMaker.MakeClient(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "makePrediction couldn't create client")
 	}
 
 	s, err := ml.New(client)
@@ -57,12 +57,8 @@ func (_ *MLEnginePredictionMaker) Predict(ctx context.Context, predictions []flo
 	}
 	p = result.Predictions[0].Income[0]
 
-	// We ignore failures in writing to memcache.
-	cacheItem := &memcache.Item{
-		Key:    cacheKey,
-		Object: &p,
-	}
-	binaryMemcacheCodec.Set(ctx, cacheItem)
+	// We ignore failures in writing to cache.
+	pm.CacheStorage.Set(ctx, cacheKey, &p)
 
 	return
 }
@@ -120,29 +116,8 @@ func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, e
 
 func generatePredictionCacheKey(predictions []float64) string {
 	var buf strings.Builder
-	buf.WriteString("~")
 	for _, p := range predictions {
 		binary.Write(&buf, binary.BigEndian, p)
 	}
 	return buf.String()
-}
-
-var binaryMemcacheCodec = memcache.Codec{
-	Marshal:   binaryMarshal,
-	Unmarshal: binaryUnmarshal,
-}
-
-// Can only marshal fixed-size data as defined by the encoding/binary package.
-func binaryMarshal(v interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, v)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// Can only unmarshal fixed-size data as defined by the encoding/binary package.
-func binaryUnmarshal(data []byte, v interface{}) error {
-	return binary.Read(bytes.NewReader(data), binary.BigEndian, v)
 }
