@@ -4,11 +4,13 @@ import (
 	"github.com/jbeshir/moonbird-predictor-frontend/aengine"
 	"github.com/jbeshir/moonbird-predictor-frontend/controllers"
 	"github.com/jbeshir/moonbird-predictor-frontend/mlclient"
+	"github.com/jbeshir/moonbird-predictor-frontend/pbook"
 	"github.com/jbeshir/moonbird-predictor-frontend/responders"
 	"github.com/jbeshir/predictionbook-extractor/htmlfetcher"
 	"golang.org/x/time/rate"
 	"google.golang.org/api/ml/v1"
 	"google.golang.org/appengine"
+	"google.golang.org/appengine/memcache"
 	"net/http"
 	"os"
 )
@@ -23,8 +25,12 @@ func main() {
 		Namespace: "moonbird-predictor-frontend",
 	}
 
-	exampleLister := &PredictionBookLister{
+	exampleLister := &pbook.Lister{
 		Fetcher: htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2),
+		CacheStorage: &aengine.CacheStorage{
+			Prefix: "pbook-",
+			Codec: memcache.Gob,
+		},
 	}
 
 	predictionMaker := &mlclient.PredictionMaker{
