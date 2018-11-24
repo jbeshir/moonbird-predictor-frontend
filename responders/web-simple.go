@@ -5,16 +5,26 @@ import (
 	"net/http"
 )
 
-type WebSimpleResponder struct{}
-
-func (_ *WebSimpleResponder) OnContextError(w http.ResponseWriter, err error) {
-	http.Error(w, "Internal Server Error", 500)
+type WebSimpleResponder struct {
+	ExposeErrors bool
 }
 
-func (_ *WebSimpleResponder) OnError(w http.ResponseWriter, err error) {
-	http.Error(w, "Internal Server Error", 500)
+func (r *WebSimpleResponder) OnContextError(w http.ResponseWriter, err error) {
+	if r.ExposeErrors {
+		http.Error(w, fmt.Sprintf("Internal Server Error: %s", err), 500)
+	} else {
+		http.Error(w, "Internal Server Error", 500)
+	}
 }
 
-func (_ *WebSimpleResponder) OnSuccess(w http.ResponseWriter) {
+func (r *WebSimpleResponder) OnError(w http.ResponseWriter, err error) {
+	if r.ExposeErrors {
+		http.Error(w, fmt.Sprintf("Internal Server Error: %s", err), 500)
+	} else {
+		http.Error(w, "Internal Server Error", 500)
+	}
+}
+
+func (r *WebSimpleResponder) OnSuccess(w http.ResponseWriter) {
 	fmt.Fprintln(w, "Done")
 }

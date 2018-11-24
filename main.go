@@ -27,14 +27,17 @@ func main() {
 
 	exampleLister := &pbook.Lister{
 		Fetcher: htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2),
-		CacheStorage: &aengine.CacheStorage{
+		CacheStore: &aengine.CacheStore{
 			Prefix: "pbook-",
-			Codec: memcache.Gob,
+			Codec:  memcache.Gob,
+		},
+		PersistentStore: &aengine.PersistentStore{
+			Prefix: "pbook-",
 		},
 	}
 
 	predictionMaker := &mlclient.PredictionMaker{
-		CacheStorage: &aengine.CacheStorage{
+		CacheStorage: &aengine.CacheStore{
 			Prefix: "~",
 			Codec:  aengine.BinaryMemcacheCodec,
 		},
@@ -53,7 +56,9 @@ func main() {
 	pbUpdateController := &controllers.ExamplesUpdate{
 		ExampleLister: exampleLister,
 	}
-	pbUpdateResponder := &responders.WebSimpleResponder{}
+	pbUpdateResponder := &responders.WebSimpleResponder{
+		ExposeErrors: true,
+	}
 	http.Handle("/cron/pb-update", pbUpdateController.HandleFunc(contextMaker, pbUpdateResponder))
 
 	appengine.Main()

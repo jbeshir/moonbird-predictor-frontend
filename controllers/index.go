@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,24 +73,12 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 	}
 
 	var exampleList strings.Builder
-	latest, listErr := c.ExampleLister.GetExamples(ctx)
+	examples, listErr := c.ExampleLister.GetExamples(ctx)
 	if listErr == nil {
-		for i := range latest.Summaries {
-			summary := &latest.Summaries[i]
-			var assignments []float64
-			for _, r := range latest.Responses {
-				if r.Prediction != summary.Id {
-					continue
-				}
-				if math.IsNaN(r.Confidence) {
-					continue
-				}
+		for _, example := range examples {
 
-				assignments = append(assignments, r.Confidence)
-			}
-
-			exampleList.WriteString(strconv.FormatInt(summary.Id, 10))
-			examplePrediction, err := c.PredictionMaker.Predict(ctx, assignments)
+			exampleList.WriteString(strconv.FormatInt(example.Id, 10))
+			examplePrediction, err := c.PredictionMaker.Predict(ctx, example.Assignments)
 			exampleList.WriteString(":")
 			if err == nil {
 				exampleList.WriteString(strconv.FormatFloat(examplePrediction, 'g', 4, 64))

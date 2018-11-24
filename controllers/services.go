@@ -15,6 +15,6 @@ type PredictionMaker interface {
 }
 
 type ExampleLister interface {
-	GetExamples(ctx context.Context) (*data.ExamplePredictions, error)
-	UpdateExamples(ctx context.Context) (*data.ExamplePredictions, error)
+	GetExamples(ctx context.Context) (data.ExamplePredictions, error)
+	UpdateExamples(ctx context.Context) (data.ExamplePredictions, error)
 }
