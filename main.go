@@ -7,6 +7,7 @@ import (
 	"github.com/jbeshir/moonbird-predictor-frontend/pbook"
 	"github.com/jbeshir/moonbird-predictor-frontend/responders"
 	"github.com/jbeshir/predictionbook-extractor/htmlfetcher"
+	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"golang.org/x/time/rate"
 	"google.golang.org/api/ml/v1"
 	"google.golang.org/appengine"
@@ -25,8 +26,11 @@ func main() {
 		Namespace: "moonbird-predictor-frontend",
 	}
 
+	exampleSource := predictions.NewSource(
+		htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2),
+		"https://predictionbook.com")
 	exampleLister := &pbook.Lister{
-		Fetcher: htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2),
+		PredictionSource: exampleSource,
 		CacheStore: &aengine.CacheStore{
 			Prefix: "pbook-",
 			Codec:  memcache.Gob,

@@ -12,6 +12,12 @@ import (
 func TestLister_GetExamples_FromCache(t *testing.T) {
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
+	s := newTestPredictionSource(t)
+	lister := &Lister{
+		PredictionSource: s,
+		CacheStore: cs,
+		PersistentStore: ps,
+	}
 
 	example := data.ExamplePrediction{
 		PredictionSummary: &predictions.PredictionSummary{
@@ -34,11 +40,6 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 		return nil
 	}
 
-	lister := &Lister{
-		CacheStore: cs,
-		PersistentStore: ps,
-	}
-
 	c := context.Background()
 	examples, err := lister.GetExamples(c)
 	if err != nil {
@@ -56,6 +57,12 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 func TestLister_GetExamples_FromStore(t *testing.T) {
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
+	s := newTestPredictionSource(t)
+	lister := &Lister{
+		PredictionSource: s,
+		CacheStore: cs,
+		PersistentStore: ps,
+	}
 
 	example := data.ExamplePrediction{
 		PredictionSummary: &predictions.PredictionSummary{
@@ -103,11 +110,6 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 		return nil
 	}
 
-	lister := &Lister{
-		CacheStore: cs,
-		PersistentStore: ps,
-	}
-
 	c := context.Background()
 	examples, err := lister.GetExamples(c)
 	if err != nil {
@@ -125,6 +127,12 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
+	s := newTestPredictionSource(t)
+	lister := &Lister{
+		PredictionSource: s,
+		CacheStore: cs,
+		PersistentStore: ps,
+	}
 
 	testErr := errors.New("bluh")
 	cs.GetFunc = func(ctx context.Context, key string, v interface{}) error {
@@ -132,11 +140,6 @@ func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 	}
 	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
 		return testErr
-	}
-
-	lister := &Lister{
-		CacheStore: cs,
-		PersistentStore: ps,
 	}
 
 	c := context.Background()

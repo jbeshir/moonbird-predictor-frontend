@@ -2,6 +2,7 @@ package pbook
 
 import (
 	"context"
+	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"testing"
 )
 
@@ -14,15 +15,15 @@ type testCacheStore struct {
 func newTestCacheStore(t *testing.T) *testCacheStore {
 	return &testCacheStore{
 		GetFunc: func(ctx context.Context, key string, v interface{}) error {
-			t.Error("cs.Get should not be called")
+			t.Error("Get should not be called")
 			return nil
 		},
 		SetFunc: func(ctx context.Context, key string, v interface{}) error {
-			t.Error("cs.Set should not be called")
+			t.Error("Set should not be called")
 			return nil
 		},
 		DeleteFunc: func(ctx context.Context, key string) error {
-			t.Error("cs.Delete should not be called")
+			t.Error("Delete should not be called")
 			return nil
 		},
 	}
@@ -48,11 +49,11 @@ type testPersistentStore struct {
 func newTestPersistentStore(t *testing.T) *testPersistentStore {
 	return &testPersistentStore{
 		GetOpaqueFunc: func(ctx context.Context, kind, key string, v interface{}) error {
-			t.Error("ps.GetOpaque should not be called")
+			t.Error("GetOpaque should not be called")
 			return nil
 		},
 		SetOpaqueFunc: func(ctx context.Context, kind, key string, v interface{}) error {
-			t.Error("ps.SetOpaque should not be called")
+			t.Error("SetOpaque should not be called")
 			return nil
 		},
 	}
@@ -64,4 +65,30 @@ func (ps *testPersistentStore) GetOpaque(ctx context.Context, kind, key string, 
 
 func (ps *testPersistentStore) SetOpaque(ctx context.Context, kind, key string, v interface{}) error {
 	return ps.SetOpaqueFunc(ctx, kind, key, v)
+}
+
+type testPredictionSource struct {
+	RetrievePredictionListPageFunc func(context.Context, int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error)
+	AllPredictionResponsesFunc func(context.Context, []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error)
+}
+
+func newTestPredictionSource(t *testing.T) *testPredictionSource {
+	return &testPredictionSource{
+		RetrievePredictionListPageFunc: func(i context.Context, i2 int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
+			t.Error("RetrievePredictionListPage should not be called")
+			return nil, nil, nil
+		},
+		AllPredictionResponsesFunc: func(i context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
+			t.Error("AllPredictionResponses should not be called")
+			return nil, nil
+		},
+	}
+}
+
+func (ps *testPredictionSource) RetrievePredictionListPage(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
+	return ps.RetrievePredictionListPageFunc(ctx, i)
+}
+
+func (ps *testPredictionSource) AllPredictionResponses(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
+	return ps.AllPredictionResponsesFunc(ctx, summaries)
 }

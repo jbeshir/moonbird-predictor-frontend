@@ -3,7 +3,6 @@ package pbook
 import (
 	"context"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"math"
 )
 
@@ -12,7 +11,7 @@ const storeExamplesKind = "ExamplePredictions"
 const storeExamplesKey = "examples"
 
 type Lister struct {
-	Fetcher         predictions.HtmlFetcher
+	PredictionSource PredictionSource
 	CacheStore      CacheStore
 	PersistentStore PersistentStore
 }
@@ -37,14 +36,12 @@ func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, erro
 }
 
 func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, error) {
-
-	s := predictions.NewSource(l.Fetcher, "https://predictionbook.com")
-	summaries, _, err := s.RetrievePredictionListPage(ctx, 1)
+	summaries, _, err := l.PredictionSource.RetrievePredictionListPage(ctx, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	responses, err := s.AllPredictionResponses(ctx, summaries)
+	responses, err := l.PredictionSource.AllPredictionResponses(ctx, summaries)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +59,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 		examples = append(examples, example)
 	}
 
-	err = l.PersistentStore.SetOpaque(ctx, storeExamplesKind, storeExamplesKey, examples)
+	err = l.PersistentStore.SetOpaque(ctx, storeExamplesKind, storeExamplesKey, &examples)
 	if err != nil {
 		return nil, err
 	}
