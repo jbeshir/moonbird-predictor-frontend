@@ -16,13 +16,13 @@ func TestLister_UpdateExamples(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	testSummaries := []*predictions.PredictionSummary{
-		{Id:7},
-		{Id:9},
+		{Id: 7},
+		{Id: 9},
 	}
 	s.RetrievePredictionListPageFunc = func(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
 		if i != 1 {
@@ -128,8 +128,8 @@ func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	s.RetrievePredictionListPageFunc = func(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
@@ -152,13 +152,13 @@ func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	testSummaries := []*predictions.PredictionSummary{
-		{Id:7},
-		{Id:9},
+		{Id: 7},
+		{Id: 9},
 	}
 	s.RetrievePredictionListPageFunc = func(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
 		return testSummaries, nil, nil
@@ -184,13 +184,13 @@ func TestLister_UpdateExamples_StoreErr(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	testSummaries := []*predictions.PredictionSummary{
-		{Id:7},
-		{Id:9},
+		{Id: 7},
+		{Id: 9},
 	}
 	s.RetrievePredictionListPageFunc = func(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
 		return testSummaries, nil, nil

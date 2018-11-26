@@ -15,8 +15,8 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	example := data.ExamplePrediction{
@@ -60,8 +60,8 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	example := data.ExamplePrediction{
@@ -130,8 +130,8 @@ func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 	s := newTestPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
-		CacheStore: cs,
-		PersistentStore: ps,
+		CacheStore:       cs,
+		PersistentStore:  ps,
 	}
 
 	testErr := errors.New("bluh")

@@ -7,8 +7,8 @@ import (
 )
 
 type testCacheStore struct {
-	GetFunc func(ctx context.Context, key string, v interface{}) error
-	SetFunc func(ctx context.Context, key string, v interface{}) error
+	GetFunc    func(ctx context.Context, key string, v interface{}) error
+	SetFunc    func(ctx context.Context, key string, v interface{}) error
 	DeleteFunc func(ctx context.Context, key string) error
 }
 
@@ -69,7 +69,7 @@ func (ps *testPersistentStore) SetOpaque(ctx context.Context, kind, key string, 
 
 type testPredictionSource struct {
 	RetrievePredictionListPageFunc func(context.Context, int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error)
-	AllPredictionResponsesFunc func(context.Context, []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error)
+	AllPredictionResponsesFunc     func(context.Context, []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error)
 }
 
 func newTestPredictionSource(t *testing.T) *testPredictionSource {

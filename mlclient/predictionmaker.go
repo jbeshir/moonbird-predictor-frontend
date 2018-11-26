@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
-	"net/http"
 	"strings"
 )
 
@@ -18,14 +17,14 @@ type PredictionMaker struct {
 func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
 
 	cacheKey := generatePredictionCacheKey(predictions)
-	err = pm.CacheStorage.Get(ctx, cacheKey, &p)
-	if err == nil {
-		return
-	}
-
 	req, err := newMLRequest(predictions)
 	if err != nil {
 		return 0, errors.Wrap(err, "makePrediction couldn't create request")
+	}
+
+	err = pm.CacheStorage.Get(ctx, cacheKey, &p)
+	if err == nil {
+		return
 	}
 
 	client, err := pm.HttpClientMaker.MakeClient(ctx)
@@ -43,15 +42,9 @@ func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (
 	if err != nil {
 		return 0, errors.Wrap(err, "makePrediction couldn't run request")
 	}
-	if r.HTTPStatusCode != http.StatusOK {
-		return 0, errors.Errorf("makePrediction couldn't run request, status code: %d", r.HTTPStatusCode)
-	}
 
 	var result result
-	err = json.NewDecoder(strings.NewReader(r.Data)).Decode(&result)
-	if err != nil {
-		return 0, errors.Wrap(err, "makePrediction couldn't decode response")
-	}
+	_ = json.NewDecoder(strings.NewReader(r.Data)).Decode(&result)
 	if len(result.Predictions) != 1 || len(result.Predictions[0].Income) != 1 {
 		return 0, errors.New("makePrediction got malformed predict response: Did not get one and only one probability")
 	}
@@ -101,15 +94,12 @@ func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, e
 		return nil, errors.Wrap(err, "mkreq could not marshal JSON")
 	}
 
-	body := &ml.GoogleApi__HttpBody{
-		Data: string(payload),
-	}
-
 	req := ml.GoogleCloudMlV1__PredictRequest{
-		HttpBody: body,
+		HttpBody: &ml.GoogleApi__HttpBody{
+			ContentType: "application/json",
+			Data:        string(payload),
+		},
 	}
-
-	req.HttpBody.ContentType = "application/json"
 
 	return &req, nil
 }

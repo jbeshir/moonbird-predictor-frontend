@@ -12,8 +12,8 @@ const storeExamplesKey = "examples"
 
 type Lister struct {
 	PredictionSource PredictionSource
-	CacheStore      CacheStore
-	PersistentStore PersistentStore
+	CacheStore       CacheStore
+	PersistentStore  PersistentStore
 }
 
 func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, error) {
