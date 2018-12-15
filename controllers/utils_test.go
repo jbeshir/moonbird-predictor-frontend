@@ -49,3 +49,20 @@ func (l *testExamplesLister) GetExamples(ctx context.Context) (data.ExamplePredi
 func (l *testExamplesLister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, error) {
 	return l.UpdateExamplesFunc(ctx)
 }
+
+func newTestPredictionMaker(t *testing.T) *testPredictionMaker {
+	return &testPredictionMaker{
+		PredictFunc: func(ctx context.Context, predictions []float64) (p float64, err error) {
+			t.Error("Predict should not be called")
+			return 0, nil
+		},
+	}
+}
+
+type testPredictionMaker struct {
+	PredictFunc func(ctx context.Context, predictions []float64) (p float64, err error)
+}
+
+func (pm *testPredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
+	return pm.PredictFunc(ctx, predictions)
+}
