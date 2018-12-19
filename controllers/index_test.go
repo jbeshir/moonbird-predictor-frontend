@@ -342,6 +342,18 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 		if len(result.ExampleList) == 0 {
 			t.Errorf("Result ExampleList should be non-empty, was empty")
 		}
+		if result.ExampleList[1].Title != "bluh2" {
+			t.Errorf("Result ExampleList second prediction title should be 'bluh', was '%s'", result.ExampleList[1].Title)
+		}
+		if result.ExampleList[0].ResultErr == nil {
+			t.Errorf("Result ExampleList first prediction should have a non-nil error, had nil error")
+		}
+		if result.ExampleList[1].ResultErr != nil {
+			t.Errorf("Result ExampleList second prediction should have a nil error, had non-nil error")
+		}
+		if result.ExampleList[1].Result != 0.32 {
+			t.Errorf("Result ExampleList second prediction result should be 0.32, was %g", result.ExampleList[1].Result)
+		}
 		if result.ExampleListErr != nil {
 			t.Errorf("Result ExampleListErr should be nil, was %s", result.ExampleListErr)
 		}
@@ -396,7 +408,7 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 			if !reflect.DeepEqual(predictions, []float64{0.5, 0.7}) {
 				t.Error("Unexpected prediction values")
 			}
-			return 0.6, nil
+			return 0, errors.New("bluh")
 		} else if calledPredictCount == 2 {
 			if !reflect.DeepEqual(predictions, []float64{0.3, 0.4}) {
 				t.Error("Unexpected prediction values")

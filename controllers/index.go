@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ type IndexResult struct {
 	AssignmentsStr string
 	Prediction     *float64
 	PredictionErr  error
-	ExampleList    string
+	ExampleList    []data.ExamplePredictionResult
 	ExampleListErr error
 }
 
@@ -72,20 +73,14 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 		}
 	}
 
-	var exampleList strings.Builder
+	var exampleResults []data.ExamplePredictionResult
 	examples, listErr := c.ExampleLister.GetExamples(ctx)
 	if listErr == nil {
 		for _, example := range examples {
-
-			exampleList.WriteString(strconv.FormatInt(example.Id, 10))
-			examplePrediction, err := c.PredictionMaker.Predict(ctx, example.Assignments)
-			exampleList.WriteString(":")
-			if err == nil {
-				exampleList.WriteString(strconv.FormatFloat(examplePrediction, 'g', 4, 64))
-			} else {
-				exampleList.WriteString(err.Error())
-			}
-			exampleList.WriteString(" ")
+			var exampleResult data.ExamplePredictionResult
+			exampleResult.ExamplePrediction = example
+			exampleResult.Result, exampleResult.ResultErr = c.PredictionMaker.Predict(ctx, example.Assignments)
+			exampleResults = append(exampleResults, exampleResult)
 		}
 	}
 
@@ -93,7 +88,7 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 		AssignmentsStr: assignmentsStr,
 		Prediction:     prediction,
 		PredictionErr:  err,
-		ExampleList:    exampleList.String(),
+		ExampleList:    exampleResults,
 		ExampleListErr: listErr,
 	}
 	return result

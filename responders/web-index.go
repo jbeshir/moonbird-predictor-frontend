@@ -20,7 +20,15 @@ var indexTemplate = template.Must(template.New("index").Parse(
 {{if .Prediction}}<div class="prediction-result-msg"><div class="prediction-result-title">Predicted Likelihood</div><div class="prediction-result">{{.Prediction}}</div></div>{{end}}
 {{if .PredictionErr}}<div class="prediction-fault-msg">Fault predicting using given sequence!<div id="prediction-fault">{{.PredictionErr}}</div></div>{{end}}
 </form>
-{{if .ExampleList}}<div class="example-list">{{.ExampleList}}</div>{{end}}
+{{if .ExampleList}}<div class="example-list">
+	{{range .ExampleList}}
+		<div class="example">
+			<a href="https://predictionbook.com/predictions/{{.Id}}" class="example-link">{{.Title}}</a>
+			{{if .Result}}<span class="example-result">{{.Result}}</span>{{end}}
+			{{if .ResultErr}}<span class="example-result-error">{{.ResultErr}}</span>{{end}}
+		</div>
+	{{end}}
+</div>{{end}}
 {{if .ExampleListErr}}<div class="example-list-fault-msg">{{.ExampleListErr}}</div>{{end}}
 </body>
 </html>`))

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/jbeshir/moonbird-predictor-frontend/controllers"
+	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"golang.org/x/net/html"
 	"io/ioutil"
 	"net/http/httptest"
@@ -82,7 +84,7 @@ func TestWebIndexResponder_OnResult_Prediction(t *testing.T) {
 
 	indexResult := &controllers.IndexResult{
 		AssignmentsStr: "0.1, 0.2",
-		Prediction: new(float64),
+		Prediction:     new(float64),
 	}
 	*indexResult.Prediction = 0.17
 
@@ -123,7 +125,7 @@ func TestWebIndexResponder_OnResult_PredictionErr(t *testing.T) {
 
 	indexResult := &controllers.IndexResult{
 		AssignmentsStr: "foo",
-		PredictionErr: errors.New("bluh"),
+		PredictionErr:  errors.New("bluh"),
 	}
 
 	recorder := httptest.NewRecorder()
@@ -163,7 +165,26 @@ func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
 	r := &WebIndexResponder{}
 
 	indexResult := &controllers.IndexResult{
-		ExampleList: "bluh",
+		ExampleList: []data.ExamplePredictionResult{
+			{
+				ExamplePrediction: data.ExamplePrediction{
+					PredictionSummary: &predictions.PredictionSummary{
+						Title: "bluh",
+						Id:    3,
+					},
+				},
+				ResultErr: errors.New("foo"),
+			},
+			{
+				ExamplePrediction: data.ExamplePrediction{
+					PredictionSummary: &predictions.PredictionSummary{
+						Title: "bluh2",
+						Id:    5,
+					},
+				},
+				Result: 0.17,
+			},
+		},
 	}
 
 	recorder := httptest.NewRecorder()
@@ -180,6 +201,41 @@ func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
 	exampleLists := len(page.Find(".example-list").Nodes)
 	if exampleLists != 1 {
 		t.Errorf("Expected page to contain 1 example list, found %d", exampleLists)
+	}
+
+	examples := page.Find(".example")
+	if len(examples.Nodes) != 2 {
+		t.Errorf("Expected page to contain 2 examples, found %d", len(examples.Nodes))
+	}
+
+	firstExampleLink, _ := page.Find(".example:nth-child(1) a.example-link").Attr("href")
+	if firstExampleLink != "https://predictionbook.com/predictions/3" {
+		t.Errorf("First example link had incorrect href: %s", firstExampleLink)
+	}
+
+	firstExampleText, _ := page.Find(".example:nth-child(1) a.example-link").Html()
+	if firstExampleText != "bluh" {
+		t.Errorf("First example link had incorrect text: %s", firstExampleText)
+	}
+
+	firstExampleResultCount := len(page.Find(".example:nth-child(1) .example-result").Nodes)
+	if firstExampleResultCount != 0 {
+		t.Errorf("Expected page to contain no result for first example, contained at least one.")
+	}
+
+	firstExampleResultErrText, _ := page.Find(".example:nth-child(1) .example-result-error").Html()
+	if firstExampleResultErrText != "foo" {
+		t.Errorf("Expected first example to show result error of 'bluh', actual result error: '%s;", firstExampleResultErrText)
+	}
+
+	secondExampleResultText, _ := page.Find(".example:nth-child(2) .example-result").Html()
+	if secondExampleResultText != "0.17" {
+		t.Errorf("Expected second example result to be 0.17, was %s", secondExampleResultText)
+	}
+
+	secondExampleResultErrCount := len(page.Find(".example:nth-child(2) .example-result-error").Nodes)
+	if secondExampleResultErrCount != 0 {
+		t.Errorf("Expected page to contain no result error for first example, contained at least one.")
 	}
 }
 
