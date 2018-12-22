@@ -3,6 +3,7 @@ package pbook
 import (
 	"context"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"math"
 )
 
@@ -41,15 +42,22 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 		return nil, err
 	}
 
-	responses, err := l.PredictionSource.AllPredictionResponses(ctx, summaries)
+	var unresolvedSummaries []*predictions.PredictionSummary
+	for _, s := range summaries {
+		if s.Outcome == predictions.Unknown {
+			unresolvedSummaries = append(unresolvedSummaries, s)
+		}
+	}
+
+	responses, err := l.PredictionSource.AllPredictionResponses(ctx, unresolvedSummaries)
 	if err != nil {
 		return nil, err
 	}
 
 	var examples data.ExamplePredictions
-	for i := range summaries {
+	for i := range unresolvedSummaries {
 		example := data.ExamplePrediction{
-			PredictionSummary: summaries[i],
+			PredictionSummary: unresolvedSummaries[i],
 		}
 		for _, r := range responses {
 			if r.Prediction == example.Id && !math.IsNaN(r.Confidence) {

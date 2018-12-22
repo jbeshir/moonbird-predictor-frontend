@@ -23,6 +23,8 @@ func TestLister_UpdateExamples(t *testing.T) {
 	testSummaries := []*predictions.PredictionSummary{
 		{Id: 7},
 		{Id: 9},
+		{Id: 11, Outcome: predictions.Right},
+		{Id: 13, Outcome: predictions.Wrong},
 	}
 	s.RetrievePredictionListPageFunc = func(ctx context.Context, i int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error) {
 		if i != 1 {
@@ -51,8 +53,13 @@ func TestLister_UpdateExamples(t *testing.T) {
 		},
 	}
 	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
-		if !reflect.DeepEqual(summaries, testSummaries) {
-			t.Error("Expected to receive test summaries, received different summary slice")
+		expectedSummaries := []*predictions.PredictionSummary{
+			{Id: 7},
+			{Id: 9},
+		}
+
+		if !reflect.DeepEqual(summaries, expectedSummaries) {
+			t.Error("Expected to receive test summaries sans resolved predictions, received different summary slice")
 		}
 		return testResponses, nil
 	}
