@@ -114,8 +114,8 @@ func TestWebIndexResponder_OnResult_Prediction(t *testing.T) {
 		t.Errorf("Expected page to contain 1 prediction result, found %d", predictionResults)
 	}
 	predictionResultValue, _ := page.Find(".prediction-result").Html()
-	if predictionResultValue != "0.17" {
-		t.Errorf("Expected page to contain '0.17' prediction result, contained %s", predictionResultValue)
+	if predictionResultValue != "0.170" {
+		t.Errorf("Expected page to contain '0.170' prediction result, contained %s", predictionResultValue)
 	}
 }
 
@@ -229,8 +229,8 @@ func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
 	}
 
 	secondExampleResultText, _ := page.Find(".example:nth-child(2) .example-result").Html()
-	if secondExampleResultText != "0.17" {
-		t.Errorf("Expected second example result to be 0.17, was %s", secondExampleResultText)
+	if secondExampleResultText != "0.170" {
+		t.Errorf("Expected second example result to be 0.170, was %s", secondExampleResultText)
 	}
 
 	secondExampleResultErrCount := len(page.Find(".example:nth-child(2) .example-result-error").Nodes)

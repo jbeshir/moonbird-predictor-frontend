@@ -7,6 +7,16 @@ h1 {
     background-color: #333;
     color: white;
 }
+.predict-page a {
+    color: #ffff99;
+    text-decoration: none;
+}
+.predict-page a:hover {
+    text-decoration: underline;
+}
+.predict-page a:visited {
+    color: #ffcc99;
+}
 #prediction-form {
     border-radius: 1em;
     padding: 1em;
@@ -34,4 +44,38 @@ h1 {
 }
 .prediction-result {
     color: #CCFFCC;
+}
+.example-list {
+    display: table;
+    max-width: 1000px;
+    margin: 0.5em auto;
+    border-radius: 0.5em;
+    background-color: #444;
+}
+.example-headers {
+    display: table-row;
+}
+.example-header {
+    display: table-cell;
+    text-align: center;
+    background-color: #666;
+    padding: 0.2em 0.5em;
+}
+.example-header:first-child {
+    border-top-left-radius: 0.5em;
+}
+.example-header:last-child {
+    border-top-right-radius: 0.5em;
+}
+.example {
+    display: table-row;
+}
+.example-link, .example-result, .example-result-error {
+    display: table-cell;
+    padding: 0.5em;
+    border-bottom: 1px solid #333;
+}
+.example-result {
+    text-align: center;
+    vertical-align: middle;
 }
