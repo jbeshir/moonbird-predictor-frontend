@@ -208,32 +208,32 @@ func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
 		t.Errorf("Expected page to contain 2 examples, found %d", len(examples.Nodes))
 	}
 
-	firstExampleLink, _ := page.Find(".example:nth-child(1) a.example-link").Attr("href")
+	firstExampleLink, _ := goquery.NewDocumentFromNode(examples.Nodes[0]).Find("a.example-link").Attr("href")
 	if firstExampleLink != "https://predictionbook.com/predictions/3" {
 		t.Errorf("First example link had incorrect href: %s", firstExampleLink)
 	}
 
-	firstExampleText, _ := page.Find(".example:nth-child(1) a.example-link").Html()
+	firstExampleText, _ := goquery.NewDocumentFromNode(examples.Nodes[0]).Find("a.example-link").Html()
 	if firstExampleText != "bluh" {
 		t.Errorf("First example link had incorrect text: %s", firstExampleText)
 	}
 
-	firstExampleResultCount := len(page.Find(".example:nth-child(1) .example-result").Nodes)
+	firstExampleResultCount := len(goquery.NewDocumentFromNode(examples.Nodes[0]).Find(".example-result").Nodes)
 	if firstExampleResultCount != 0 {
 		t.Errorf("Expected page to contain no result for first example, contained at least one.")
 	}
 
-	firstExampleResultErrText, _ := page.Find(".example:nth-child(1) .example-result-error").Html()
+	firstExampleResultErrText, _ := goquery.NewDocumentFromNode(examples.Nodes[0]).Find(".example-result-error").Html()
 	if firstExampleResultErrText != "foo" {
 		t.Errorf("Expected first example to show result error of 'bluh', actual result error: '%s;", firstExampleResultErrText)
 	}
 
-	secondExampleResultText, _ := page.Find(".example:nth-child(2) .example-result").Html()
+	secondExampleResultText, _ := goquery.NewDocumentFromNode(examples.Nodes[1]).Find(".example-result").Html()
 	if secondExampleResultText != "0.170" {
 		t.Errorf("Expected second example result to be 0.170, was %s", secondExampleResultText)
 	}
 
-	secondExampleResultErrCount := len(page.Find(".example:nth-child(2) .example-result-error").Nodes)
+	secondExampleResultErrCount := len(goquery.NewDocumentFromNode(examples.Nodes[1]).Find(".example-result-error").Nodes)
 	if secondExampleResultErrCount != 0 {
 		t.Errorf("Expected page to contain no result error for first example, contained at least one.")
 	}
