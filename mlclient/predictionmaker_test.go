@@ -11,6 +11,8 @@ import (
 )
 
 func TestNewMLRequest(t *testing.T) {
+	t.Parallel()
+
 	mlRequest, err := newMLRequest([]float64{0.4, 0.1})
 	if err != nil {
 		t.Errorf("Unexpected error from newMlRequest: %s", err)
@@ -29,6 +31,8 @@ func TestNewMLRequest(t *testing.T) {
 }
 
 func TestNewMLRequest_OutOfRange(t *testing.T) {
+	t.Parallel()
+
 	mlRequest, err := newMLRequest([]float64{1.4, 0.1})
 	if mlRequest != nil {
 		t.Errorf("Expected nil request, got request")
@@ -41,6 +45,8 @@ func TestNewMLRequest_OutOfRange(t *testing.T) {
 }
 
 func TestGeneratePredictionCacheKey(t *testing.T) {
+	t.Parallel()
+
 	key := generatePredictionCacheKey([]float64{0.4, 0.1})
 	expectedKey := string([]byte{
 		0x3F, 0xD9, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9A, // Big-endian 0.4
@@ -52,6 +58,8 @@ func TestGeneratePredictionCacheKey(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_OutOfRange(t *testing.T) {
+	t.Parallel()
+
 	cs := newTestCacheStore(t)
 	cm := newTestHttpClientMaker(t)
 	pm := &PredictionMaker{
@@ -70,6 +78,8 @@ func TestPredictionMaker_Predict_OutOfRange(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_FromCache(t *testing.T) {
+	t.Parallel()
+
 	cs := newTestCacheStore(t)
 	cm := newTestHttpClientMaker(t)
 	pm := &PredictionMaker{
@@ -104,6 +114,8 @@ func TestPredictionMaker_Predict_FromCache(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_FromMLEngine(t *testing.T) {
+	t.Parallel()
+
 	cs, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		body, _ := ioutil.ReadAll(r.Body)
 		if r.Method != "POST" {
@@ -152,6 +164,8 @@ func TestPredictionMaker_Predict_FromMLEngine(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_FromMLEngineReqErr(t *testing.T) {
+	t.Parallel()
+
 	_, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		return nil, errors.New("nope")
 	})
@@ -167,6 +181,8 @@ func TestPredictionMaker_Predict_FromMLEngineReqErr(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_FromMLEngineStatusCodeErr(t *testing.T) {
+	t.Parallel()
+
 	_, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		resp := new(http.Response)
 		resp.StatusCode = 401
@@ -186,6 +202,8 @@ func TestPredictionMaker_Predict_FromMLEngineStatusCodeErr(t *testing.T) {
 }
 
 func TestPredictionMaker_Predict_FromMLEngineStatusCodeNotJsonErr(t *testing.T) {
+	t.Parallel()
+
 	_, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		resp := new(http.Response)
 		resp.StatusCode = 200
@@ -205,6 +223,8 @@ func TestPredictionMaker_Predict_FromMLEngineStatusCodeNotJsonErr(t *testing.T) 
 }
 
 func TestPredictionMaker_Predict_FromMLEngineStatusCodeWrongPredictionCountErr(t *testing.T) {
+	t.Parallel()
+
 	_, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		resp := new(http.Response)
 		resp.StatusCode = 200
@@ -224,6 +244,8 @@ func TestPredictionMaker_Predict_FromMLEngineStatusCodeWrongPredictionCountErr(t
 }
 
 func TestPredictionMaker_Predict_FromMLEngineStatusCodeWrongIncomeCountErr(t *testing.T) {
+	t.Parallel()
+
 	_, pm := predictionMaker_Predict_FromMLEngineSetup(t, func(r *http.Request) (*http.Response, error) {
 		resp := new(http.Response)
 		resp.StatusCode = 200

@@ -13,6 +13,7 @@ import (
 )
 
 func TestWebIndexResponder_OnContextError(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 
@@ -31,6 +32,7 @@ func TestWebIndexResponder_OnContextError(t *testing.T) {
 }
 
 func TestWebIndexResponder_OnResult(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 
@@ -79,6 +81,7 @@ func TestWebIndexResponder_OnResult(t *testing.T) {
 }
 
 func TestWebIndexResponder_OnResult_Prediction(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 
@@ -120,6 +123,7 @@ func TestWebIndexResponder_OnResult_Prediction(t *testing.T) {
 }
 
 func TestWebIndexResponder_OnResult_PredictionErr(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 
@@ -161,6 +165,7 @@ func TestWebIndexResponder_OnResult_PredictionErr(t *testing.T) {
 }
 
 func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 
@@ -240,6 +245,7 @@ func TestWebIndexResponder_OnResult_ExampleList(t *testing.T) {
 }
 
 func TestWebIndexResponder_OnResult_ExampleListErr(t *testing.T) {
+	t.Parallel()
 
 	r := &WebIndexResponder{}
 

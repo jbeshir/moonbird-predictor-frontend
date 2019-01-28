@@ -10,6 +10,8 @@ import (
 )
 
 func TestLister_GetExamples_FromCache(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)
@@ -55,6 +57,8 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 }
 
 func TestLister_GetExamples_FromStore(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)
@@ -125,6 +129,8 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 }
 
 func TestLister_GetExamples_FromStoreErr(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)

@@ -12,6 +12,8 @@ import (
 )
 
 func TestIndex_HandleFunc_NoExamples_NoAssignments(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)
@@ -71,6 +73,8 @@ func TestIndex_HandleFunc_NoExamples_NoAssignments(t *testing.T) {
 }
 
 func TestIndex_HandleFunc_NoExamples_Assignments(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)
@@ -139,6 +143,8 @@ func TestIndex_HandleFunc_NoExamples_Assignments(t *testing.T) {
 }
 
 func TestIndex_HandleFunc_NoExamples_JunkAssignments(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)
@@ -200,6 +206,8 @@ func TestIndex_HandleFunc_NoExamples_JunkAssignments(t *testing.T) {
 }
 
 func TestIndex_HandleFunc_NoExamples_Assignments_PredictErr(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)
@@ -268,6 +276,8 @@ func TestIndex_HandleFunc_NoExamples_Assignments_PredictErr(t *testing.T) {
 }
 
 func TestIndex_HandleFunc_ExamplesErr_NoAssignments(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)
@@ -327,6 +337,8 @@ func TestIndex_HandleFunc_ExamplesErr_NoAssignments(t *testing.T) {
 }
 
 func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	l := newTestExamplesLister(t)

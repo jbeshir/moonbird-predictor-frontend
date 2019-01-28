@@ -11,6 +11,8 @@ import (
 )
 
 func TestLister_UpdateExamples(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)
@@ -130,6 +132,8 @@ func TestLister_UpdateExamples(t *testing.T) {
 }
 
 func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)
@@ -154,6 +158,8 @@ func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
 }
 
 func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)
@@ -186,6 +192,8 @@ func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 }
 
 func TestLister_UpdateExamples_StoreErr(t *testing.T) {
+	t.Parallel()
+
 	ps := newTestPersistentStore(t)
 	cs := newTestCacheStore(t)
 	s := newTestPredictionSource(t)

@@ -9,6 +9,8 @@ import (
 )
 
 func TestExamplesUpdate_HandleFunc_Success(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	calledUpdateExamples := false
@@ -51,6 +53,8 @@ func TestExamplesUpdate_HandleFunc_Success(t *testing.T) {
 }
 
 func TestExamplesUpdate_HandleFunc_ContextError(t *testing.T) {
+	t.Parallel()
+
 	l := newTestExamplesLister(t)
 
 	calledOnContextError := false
@@ -78,6 +82,8 @@ func TestExamplesUpdate_HandleFunc_ContextError(t *testing.T) {
 }
 
 func TestExamplesUpdate_HandleFunc_UpdateError(t *testing.T) {
+	t.Parallel()
+
 	var createdContext context.Context
 
 	calledUpdateExamples := false
