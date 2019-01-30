@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"math"
 	"reflect"
@@ -13,9 +14,9 @@ import (
 func TestLister_UpdateExamples(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -54,7 +55,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 			Confidence: 0.1,
 		},
 	}
-	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
+	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionSummary, []*predictions.PredictionResponse, error) {
 		expectedSummaries := []*predictions.PredictionSummary{
 			{Id: 7},
 			{Id: 9},
@@ -63,7 +64,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 		if !reflect.DeepEqual(summaries, expectedSummaries) {
 			t.Error("Expected to receive test summaries sans resolved predictions, received different summary slice")
 		}
-		return testResponses, nil
+		return nil, testResponses, nil
 	}
 
 	storeSetCallCount := 0
@@ -134,9 +135,9 @@ func TestLister_UpdateExamples(t *testing.T) {
 func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -160,9 +161,9 @@ func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
 func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -177,8 +178,8 @@ func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 		return testSummaries, nil, nil
 	}
 
-	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
-		return nil, errors.New("nope")
+	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionSummary, []*predictions.PredictionResponse, error) {
+		return nil, nil, errors.New("nope")
 	}
 
 	c := context.Background()
@@ -194,9 +195,9 @@ func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 func TestLister_UpdateExamples_StoreErr(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -229,8 +230,8 @@ func TestLister_UpdateExamples_StoreErr(t *testing.T) {
 			Confidence: 0.1,
 		},
 	}
-	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error) {
-		return testResponses, nil
+	s.AllPredictionResponsesFunc = func(ctx context.Context, summaries []*predictions.PredictionSummary) ([]*predictions.PredictionSummary, []*predictions.PredictionResponse, error) {
+		return nil, testResponses, nil
 	}
 
 	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {

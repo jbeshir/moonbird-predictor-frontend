@@ -2,6 +2,7 @@ package mlclient
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -60,7 +61,7 @@ func TestGeneratePredictionCacheKey(t *testing.T) {
 func TestPredictionMaker_Predict_OutOfRange(t *testing.T) {
 	t.Parallel()
 
-	cs := newTestCacheStore(t)
+	cs := testhelpers.NewCacheStore(t)
 	cm := newTestHttpClientMaker(t)
 	pm := &PredictionMaker{
 		CacheStorage:    cs,
@@ -80,7 +81,7 @@ func TestPredictionMaker_Predict_OutOfRange(t *testing.T) {
 func TestPredictionMaker_Predict_FromCache(t *testing.T) {
 	t.Parallel()
 
-	cs := newTestCacheStore(t)
+	cs := testhelpers.NewCacheStore(t)
 	cm := newTestHttpClientMaker(t)
 	pm := &PredictionMaker{
 		CacheStorage:    cs,
@@ -264,8 +265,8 @@ func TestPredictionMaker_Predict_FromMLEngineStatusCodeWrongIncomeCountErr(t *te
 	}
 }
 
-func predictionMaker_Predict_FromMLEngineSetup(t *testing.T, roundTripFunc func(*http.Request) (*http.Response, error)) (*testCacheStore, *PredictionMaker) {
-	cs := newTestCacheStore(t)
+func predictionMaker_Predict_FromMLEngineSetup(t *testing.T, roundTripFunc func(*http.Request) (*http.Response, error)) (*testhelpers.CacheStore, *PredictionMaker) {
+	cs := testhelpers.NewCacheStore(t)
 	cm := newTestHttpClientMaker(t)
 	pm := &PredictionMaker{
 		CacheStorage:    cs,

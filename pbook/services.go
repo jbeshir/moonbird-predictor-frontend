@@ -18,5 +18,5 @@ type PersistentStore interface {
 
 type PredictionSource interface {
 	RetrievePredictionListPage(context.Context, int64) ([]*predictions.PredictionSummary, *predictions.PredictionListPageInfo, error)
-	AllPredictionResponses(context.Context, []*predictions.PredictionSummary) ([]*predictions.PredictionResponse, error)
+	AllPredictionResponses(context.Context, []*predictions.PredictionSummary) ([]*predictions.PredictionSummary, []*predictions.PredictionResponse, error)
 }

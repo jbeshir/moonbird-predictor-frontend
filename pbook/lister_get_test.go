@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"reflect"
 	"testing"
@@ -12,9 +13,9 @@ import (
 func TestLister_GetExamples_FromCache(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -59,9 +60,9 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 func TestLister_GetExamples_FromStore(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -131,9 +132,9 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 	t.Parallel()
 
-	ps := newTestPersistentStore(t)
-	cs := newTestCacheStore(t)
-	s := newTestPredictionSource(t)
+	ps := testhelpers.NewPersistentStore(t)
+	cs := testhelpers.NewCacheStore(t)
+	s := testhelpers.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,

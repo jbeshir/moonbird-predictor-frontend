@@ -49,7 +49,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 		}
 	}
 
-	responses, err := l.PredictionSource.AllPredictionResponses(ctx, unresolvedSummaries)
+	_, responses, err := l.PredictionSource.AllPredictionResponses(ctx, unresolvedSummaries)
 	if err != nil {
 		return nil, err
 	}

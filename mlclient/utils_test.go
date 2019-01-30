@@ -6,39 +6,30 @@ import (
 	"testing"
 )
 
-type testCacheStore struct {
-	GetFunc    func(ctx context.Context, key string, v interface{}) error
-	SetFunc    func(ctx context.Context, key string, v interface{}) error
-	DeleteFunc func(ctx context.Context, key string) error
+type testFileStore struct {
+	LoadFunc func(ctx context.Context, path string) ([]byte, error)
+	SaveFunc func(ctx context.Context, path string, content []byte) error
 }
 
-func newTestCacheStore(t *testing.T) *testCacheStore {
-	return &testCacheStore{
-		GetFunc: func(ctx context.Context, key string, v interface{}) error {
-			t.Error("Get should not be called")
-			return nil
+func newTestFileStore(t *testing.T) *testFileStore {
+	return &testFileStore{
+		LoadFunc: func(ctx context.Context, path string) (bytes []byte, e error) {
+			t.Error("Load should not be called")
+			return nil, nil
 		},
-		SetFunc: func(ctx context.Context, key string, v interface{}) error {
-			t.Error("Set should not be called")
-			return nil
-		},
-		DeleteFunc: func(ctx context.Context, key string) error {
-			t.Error("Delete should not be called")
+		SaveFunc: func(ctx context.Context, path string, content []byte) error {
+			t.Error("Save should not be called")
 			return nil
 		},
 	}
 }
 
-func (cs *testCacheStore) Get(ctx context.Context, key string, v interface{}) error {
-	return cs.GetFunc(ctx, key, v)
+func (fs *testFileStore) Load(ctx context.Context, path string) ([]byte, error) {
+	return fs.LoadFunc(ctx, path)
 }
 
-func (cs *testCacheStore) Set(ctx context.Context, key string, v interface{}) error {
-	return cs.SetFunc(ctx, key, v)
-}
-
-func (cs *testCacheStore) Delete(ctx context.Context, key string) error {
-	return cs.DeleteFunc(ctx, key)
+func (fs *testFileStore) Save(ctx context.Context, path string, content []byte) error {
+	return fs.SaveFunc(ctx, path, content)
 }
 
 type testHttpClientMaker struct {

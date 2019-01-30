@@ -4,7 +4,7 @@ require (
 	cloud.google.com/go v0.32.0 // indirect
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/jbeshir/predictionbook-extractor v0.0.0-20181117031552-0725b8130b36
+	github.com/jbeshir/predictionbook-extractor v0.0.0-20190130183601-4a3603005f34
 	github.com/pkg/errors v0.8.0
 	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 	golang.org/x/oauth2 v0.0.0-20181106182150-f42d05182288
