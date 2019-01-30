@@ -31,9 +31,53 @@ func TestTrainer_Retrain(t *testing.T) {
 			status.LatestModel = 123
 		}
 
-		wantStep := 0
+		if step != 0 && step != 10 {
+			t.Errorf("Expected to be called at step 0 and 10, was called at step %d", step)
+		}
+		step++
+
+		return nil
+	}
+	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+		wantKind := "TrainerStatus"
+		if kind != wantKind {
+			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
+		}
+
+		wantKey := "status"
+		if key != wantKey {
+			t.Errorf("Expected retrieval to be of key %s, was %s", wantKey, key)
+		}
+
+		if status, ok := v.(*trainerStatus); !ok {
+			t.Errorf("Expected output struct to be of type *trainerStatus, was not")
+		} else {
+			wantModel := 500
+			if status.LatestModel != 500 {
+				t.Errorf("Expected new latest model to be %d, was %d", wantModel, status.LatestModel)
+			}
+		}
+
+		wantStep := 11
 		if step != wantStep {
 			t.Errorf("Expected to be called at step %d, was called at step %d", wantStep, step)
+		}
+		step++
+
+		return nil
+	}
+	ps.TransactFunc = func(ctx context.Context, f func(ctx context.Context) error) error {
+		wantStep := 9
+		if step != wantStep {
+			t.Errorf("Expected to be called at step %d, was called at step %d", wantStep, step)
+		}
+		step++
+
+		f(ctx)
+
+		wantStep = 12
+		if step != wantStep {
+			t.Errorf("Expected to be at step %d after transaction, was at step %d", wantStep, step)
 		}
 		step++
 
@@ -53,7 +97,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		}
 		step++
 
-		return []byte("2,2,300,0.49,6,0,Person1,Deadline Due 1\n5,2,400,0.49,6,0,Person2,Deadline Due 2\n10,2,1000,0.96,2,2,Person3,Deadline Not Due"), nil
+		return []byte("2,2,300,0.49,6,0,Person1,Deadline Due 1\n5,2,400,0.49,6,0,Person2,Deadline Due 2\n10,2,1000,0.96,2,0,Person3,Deadline Not Due"), nil
 	}
 	fs.SaveFunc = func(ctx context.Context, path string, content []byte) error {
 
@@ -64,6 +108,54 @@ func TestTrainer_Retrain(t *testing.T) {
 			}
 
 			wantFile := "2,8,0.1,Responder1,bluh\n2,9,0.2,Responder1,\n14,11,0.4,Responder2,\n"
+			if wantFile != string(content) {
+				t.Errorf("Saved file content did not match expected, wanted:\n%s\n\ngot:\n\n%s", wantFile, string(content))
+			}
+
+			step++
+		} else if step == 5 {
+			wantPath := "500/summarydata-unresolved.csv"
+			if wantPath != path {
+				t.Errorf("Expected saving to be at path %s, was %s", wantPath, path)
+			}
+
+			wantFile := "5,2,600,0.3,1,0,creator2,fuzz\n7,200,3000,0,0,0,,\n10,2,1000,0.96,2,0,Person3,Deadline Not Due\n"
+			if wantFile != string(content) {
+				t.Errorf("Saved file content did not match expected, wanted:\n%s\n\ngot:\n\n%s", wantFile, string(content))
+			}
+
+			step++
+		} else if step == 6 {
+			wantPath := "500/summarydata-train.csv"
+			if wantPath != path {
+				t.Errorf("Expected saving to be at path %s, was %s", wantPath, path)
+			}
+
+			wantFile := "2,2,200,0.15,2,1,creator1,foo\n14,2,400,0.4,1,2,creator3,blah\n"
+			if wantFile != string(content) {
+				t.Errorf("Saved file content did not match expected, wanted:\n%s\n\ngot:\n\n%s", wantFile, string(content))
+			}
+
+			step++
+		} else if step == 7 {
+			wantPath := "500/summarydata-cv.csv"
+			if wantPath != path {
+				t.Errorf("Expected saving to be at path %s, was %s", wantPath, path)
+			}
+
+			wantFile := ""
+			if wantFile != string(content) {
+				t.Errorf("Saved file content did not match expected, wanted:\n%s\n\ngot:\n\n%s", wantFile, string(content))
+			}
+
+			step++
+		} else if step == 8 {
+			wantPath := "500/summarydata-test.csv"
+			if wantPath != path {
+				t.Errorf("Expected saving to be at path %s, was %s", wantPath, path)
+			}
+
+			wantFile := ""
 			if wantFile != string(content) {
 				t.Errorf("Saved file content did not match expected, wanted:\n%s\n\ngot:\n\n%s", wantFile, string(content))
 			}
@@ -89,8 +181,10 @@ func TestTrainer_Retrain(t *testing.T) {
 
 		return []*predictions.PredictionSummary{
 			{
-				Id:      7,
-				Outcome: predictions.Unknown,
+				Id:       7,
+				Outcome:  predictions.Unknown,
+				Created:  time.Unix(200, 0),
+				Deadline: time.Unix(3000, 0),
 			},
 			{
 				Id:      14,
@@ -196,7 +290,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		t.Errorf("Expected err to be nil, was %s", err.Error())
 	}
 
-	wantStep := 5
+	wantStep := 13
 	if step != wantStep {
 		t.Errorf("Expected to end on step %d, ended at step %d", wantStep, step)
 	}

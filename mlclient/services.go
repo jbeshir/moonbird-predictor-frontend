@@ -15,6 +15,7 @@ type CacheStorage interface {
 type PersistentStore interface {
 	GetOpaque(ctx context.Context, kind, key string, v interface{}) error
 	SetOpaque(ctx context.Context, kind, key string, v interface{}) error
+	Transact(ctx context.Context, f func(ctx context.Context) error) error
 }
 
 type FileStore interface {
