@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"errors"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
+	"google.golang.org/api/ml/v1"
+	"math/rand"
+	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -18,9 +22,12 @@ type Trainer struct {
 	PersistentStore  PersistentStore
 	FileStore        FileStore
 	PredictionSource PredictionSource
+	ModelPath        string
+	DataPath         string
+	TrainPackage     string
 }
 
-func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
+func (tr *Trainer) Retrain(ctx context.Context, client *http.Client, now time.Time) error {
 	newModel := now.Unix()
 	newModelStr := strconv.FormatInt(newModel, 10)
 
@@ -31,51 +38,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 		return err
 	}
 
-	oldPredictionFile, err := tr.FileStore.Load(ctx, strconv.FormatInt(status.LatestModel, 10)+"/summarydata-unresolved.csv")
-	if err != nil {
-		return err
-	}
-
-	newPredictions, err := tr.PredictionSource.AllPredictionsSince(ctx, time.Unix(status.LatestModel, 0))
-	if err != nil {
-		return err
-	}
-
-	csvReader := csv.NewReader(bytes.NewReader(oldPredictionFile))
-	oldPredictionRecords, err := csvReader.ReadAll()
-	if err != nil {
-		return err
-	}
-
-	var unresolved []*predictions.PredictionSummary
-	var unresolvedRecords [][]string
-	var potentiallyResolved []*predictions.PredictionSummary
-	for _, prediction := range oldPredictionRecords {
-		deadlineUnix, err := strconv.ParseInt(prediction[2], 10, 64)
-		if err != nil {
-			return err
-		}
-
-		id, err := strconv.ParseInt(prediction[0], 10, 64)
-		if err != nil {
-			return err
-		}
-
-		if now.After(time.Unix(deadlineUnix, 0)) {
-			potentiallyResolved = append(potentiallyResolved, &predictions.PredictionSummary{
-				Id: id,
-			})
-		} else {
-			unresolvedRecords = append(unresolvedRecords, prediction)
-		}
-	}
-	for _, p := range newPredictions {
-		if p.Outcome != predictions.Unknown {
-			potentiallyResolved = append(potentiallyResolved, p)
-		} else {
-			unresolved = append(unresolved, p)
-		}
-	}
+	potentiallyResolved, unresolved, unresolvedRecords, err := tr.retrieveNewAndOutstandingPredictions(ctx, status.LatestModel, now)
 
 	// Retrieve and save out the responses to the newly resolved predictions.
 	newSummaries, responses, err := tr.PredictionSource.AllPredictionResponses(ctx, potentiallyResolved)
@@ -137,24 +100,104 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 		return err
 	}
 
-	trainRecords := tr.generateSummaryRecords(resolvedSummaries)
-	err = tr.writeCsv(ctx, newModelStr+"/summarydata-train.csv", trainRecords)
+	train, cv, test := divideSummaries(rand.New(rand.NewSource(time.Now().Unix())), resolvedSummaries)
+	err = tr.writeCsv(ctx, newModelStr+"/summarydata-train.csv", tr.generateSummaryRecords(train))
 	if err != nil {
 		return err
 	}
-	err = tr.writeCsv(ctx, newModelStr+"/summarydata-cv.csv", nil)
+	err = tr.writeCsv(ctx, newModelStr+"/summarydata-cv.csv", tr.generateSummaryRecords(cv))
 	if err != nil {
 		return err
 	}
-	err = tr.writeCsv(ctx, newModelStr+"/summarydata-test.csv", nil)
+	err = tr.writeCsv(ctx, newModelStr+"/summarydata-test.csv", tr.generateSummaryRecords(test))
 	if err != nil {
 		return err
 	}
 
-	err = tr.PersistentStore.Transact(ctx, func(ctx context.Context) error {
+	mlService, err := ml.New(client)
+	if err != nil {
+		return err
+	}
+
+	createCall := mlService.Projects.Jobs.Create("", tr.newTrainJobSpec(status.LatestModel, newModel))
+	_, err = createCall.Do()
+	if err != nil {
+		return err
+	}
+
+	err = tr.updateLatestModel(ctx, status.LatestModel, newModel)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tr *Trainer) retrieveNewAndOutstandingPredictions(ctx context.Context, prevModel int64, now time.Time) (potentiallyResolved []*predictions.PredictionSummary, unresolved []*predictions.PredictionSummary, unresolvedRecords [][]string, err error) {
+	oldPredictionFile, err := tr.FileStore.Load(ctx, strconv.FormatInt(prevModel, 10)+"/summarydata-unresolved.csv")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	newPredictions, err := tr.PredictionSource.AllPredictionsSince(ctx, time.Unix(prevModel, 0))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	csvReader := csv.NewReader(bytes.NewReader(oldPredictionFile))
+	oldPredictionRecords, err := csvReader.ReadAll()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	potentiallyResolvedIds := make(map[int64]struct{})
+	for _, p := range newPredictions {
+		if p.Outcome != predictions.Unknown {
+			_, exists := potentiallyResolvedIds[p.Id]
+			if !exists {
+				potentiallyResolved = append(potentiallyResolved, p)
+				potentiallyResolvedIds[p.Id] = struct{}{}
+			}
+		} else {
+			unresolved = append(unresolved, p)
+		}
+	}
+
+	for _, prediction := range oldPredictionRecords {
+		deadlineUnix, err := strconv.ParseInt(prediction[2], 10, 64)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		id, err := strconv.ParseInt(prediction[0], 10, 64)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		if now.After(time.Unix(deadlineUnix, 0)) {
+			_, exists := potentiallyResolvedIds[id]
+			if !exists {
+				potentiallyResolved = append(potentiallyResolved, &predictions.PredictionSummary{
+					Id: id,
+				})
+				potentiallyResolvedIds[id] = struct{}{}
+			}
+		} else {
+			unresolvedRecords = append(unresolvedRecords, prediction)
+		}
+	}
+
+	return potentiallyResolved, unresolved, unresolvedRecords, nil
+}
+
+func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int64) error {
+	return tr.PersistentStore.Transact(ctx, func(ctx context.Context) error {
 		status := new(trainerStatus)
 		if err := tr.PersistentStore.GetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
 			return err
+		}
+		if status.LatestModel != oldModel {
+			return errors.New("concurrent latest model update")
 		}
 
 		status.LatestModel = newModel
@@ -164,11 +207,34 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 		return nil
 	})
-	if err != nil {
-		return err
-	}
+}
 
-	return nil
+func divideSummaries(rs rand.Source, summaries []*predictions.PredictionSummary) (train, cv, test []*predictions.PredictionSummary) {
+
+	cvSize := int(float64(len(summaries)) * 0.2)
+	testSize := cvSize
+	trainSize := len(summaries) - cvSize - testSize
+
+	summaries = append([]*predictions.PredictionSummary{}, summaries...)
+	r := rand.New(rs)
+	r.Shuffle(len(summaries), func(i, j int) { summaries[i], summaries[j] = summaries[j], summaries[i] })
+
+	train = summaries[:trainSize]
+	sort.Slice(train, func(i, j int) bool {
+		return train[i].Id < train[j].Id
+	})
+
+	cv = summaries[trainSize : trainSize+cvSize]
+	sort.Slice(cv, func(i, j int) bool {
+		return cv[i].Id < cv[j].Id
+	})
+
+	test = summaries[trainSize+cvSize:]
+	sort.Slice(test, func(i, j int) bool {
+		return test[i].Id < test[j].Id
+	})
+
+	return train, cv, test
 }
 
 func (tr *Trainer) generateSummaryRecords(summaries []*predictions.PredictionSummary) (records [][]string) {
@@ -210,4 +276,27 @@ func (tr *Trainer) writeCsv(ctx context.Context, path string, records [][]string
 	}
 
 	return nil
+}
+
+func (tr *Trainer) newTrainJobSpec(oldModel, newModel int64) *ml.GoogleCloudMlV1__Job {
+	return &ml.GoogleCloudMlV1__Job{
+		JobId: "predictor_" + strconv.FormatInt(newModel, 10),
+		TrainingInput: &ml.GoogleCloudMlV1__TrainingInput{
+			JobDir:         "gs://" + tr.ModelPath + "/" + strconv.FormatInt(newModel, 10) + "/",
+			PythonModule:   "trainer.train",
+			PythonVersion:  "3.5",
+			RuntimeVersion: "1.12",
+			Args: []string{
+				"--train-file",
+				"gs://" + tr.DataPath + "/" + strconv.FormatInt(newModel, 10) + "/",
+				"--num-epochs",
+				"1",
+				"--prev-model-dir",
+				"gs://" + tr.ModelPath + "/" + strconv.FormatInt(oldModel, 10) + "/model/",
+			},
+			PackageUris: []string{
+				tr.TrainPackage,
+			},
+		},
+	}
 }
