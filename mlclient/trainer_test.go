@@ -38,8 +38,8 @@ func TestTrainer_Retrain(t *testing.T) {
 			status.LatestModel = 123
 		}
 
-		if step != 0 && step != 11 {
-			t.Errorf("Expected to be called at step 0 and 11, was called at step %d", step)
+		if step != 0 && step != 15 {
+			t.Errorf("Expected to be called at step 0 and 15, was called at step %d", step)
 		}
 		step++
 
@@ -65,7 +65,7 @@ func TestTrainer_Retrain(t *testing.T) {
 			}
 		}
 
-		wantStep := 12
+		wantStep := 16
 		if step != wantStep {
 			t.Errorf("Expected to be called at step %d, was called at step %d", wantStep, step)
 		}
@@ -74,7 +74,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		return nil
 	}
 	ps.TransactFunc = func(ctx context.Context, f func(ctx context.Context) error) error {
-		wantStep := 10
+		wantStep := 14
 		if step != wantStep {
 			t.Errorf("Expected to be called at step %d, was called at step %d", wantStep, step)
 		}
@@ -82,7 +82,7 @@ func TestTrainer_Retrain(t *testing.T) {
 
 		f(ctx)
 
-		wantStep = 13
+		wantStep = 17
 		if step != wantStep {
 			t.Errorf("Expected to be at step %d after transaction, was at step %d", wantStep, step)
 		}
@@ -295,38 +295,133 @@ func TestTrainer_Retrain(t *testing.T) {
 	client := new(http.Client)
 	client.Transport = &testRoundTripper{
 		RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-			wantStep := 9
-			if step != wantStep {
-				t.Errorf("Expected to be called at step %d, was called at step %d", wantStep, step)
-			}
-			step++
+			if step == 9 {
+				wantPath := "/v1//jobs"
+				if req.URL.Path != "/v1//jobs" {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
 
-			wantPath := "/v1//jobs"
-			if req.URL.Path != "/v1//jobs" {
-				t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
-			}
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
 
-			wantHost := "ml.googleapis.com"
-			if req.URL.Host != wantHost {
-				t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
-			}
+				job := new(ml.GoogleCloudMlV1__Job)
+				jsonErr := json.NewDecoder(req.Body).Decode(job)
+				if jsonErr != nil {
+					t.Errorf("Unable to decode submitted job: %s", jsonErr)
+				}
 
-			job := new(ml.GoogleCloudMlV1__Job)
-			jsonErr := json.NewDecoder(req.Body).Decode(job)
-			if jsonErr != nil {
-				t.Errorf("Unable to decode submitted job: %s", jsonErr)
-			}
+				wantJobId := "predictor_500"
+				if job.JobId != wantJobId {
+					t.Errorf("Expected a job ID of %s, got %s", wantJobId, job.JobId)
+				}
 
-			wantJobId := "predictor_500"
-			if job.JobId != wantJobId {
-				t.Errorf("Expected a job ID of %s, got %s", wantJobId, job.JobId)
-			}
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				resp.Body = ioutil.NopCloser(strings.NewReader(`{}`))
 
-			resp := new(http.Response)
-			resp.StatusCode = 200
-			resp.ContentLength = -1
-			resp.Body = ioutil.NopCloser(strings.NewReader(`{}`))
-			return resp, nil
+				step++
+				return resp, nil
+			} else if step == 10 {
+				wantPath := "/v1/predictor_500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"SUCCEEDED"}`))
+
+				step++
+				return resp, nil
+			} else if step == 11 {
+				wantPath := "/v1/projects/Moonbird/models/Predictor/versions"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				version := new(ml.GoogleCloudMlV1__Version)
+				jsonErr := json.NewDecoder(req.Body).Decode(version)
+				if jsonErr != nil {
+					t.Errorf("Unable to decode submitted version: %s", jsonErr)
+				}
+
+				wantName := "v500"
+				if version.Name != wantName {
+					t.Errorf("Expected a version name of %s, got %s", wantName, version.Name)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				resp.Body = ioutil.NopCloser(strings.NewReader(`{}`))
+
+				step++
+				return resp, nil
+			} else if step == 12 {
+				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"READY"}`))
+
+				step++
+				return resp, nil
+			} else if step == 13 {
+				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500:setDefault"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				resp.Body = ioutil.NopCloser(strings.NewReader(`{}`))
+
+				step++
+				return resp, nil
+			} else {
+				t.Errorf("Expected to be called at step 9, 10, 11, 12, and 13, was called at step %d", step)
+				step++
+				return nil, nil
+			}
 		},
 	}
 
@@ -336,7 +431,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		t.Errorf("Expected err to be nil, was %s", err.Error())
 	}
 
-	wantStep := 14
+	wantStep := 18
 	if step != wantStep {
 		t.Errorf("Expected to end on step %d, ended at step %d", wantStep, step)
 	}
@@ -730,5 +825,318 @@ func TestTrainer_JobSpec(t *testing.T) {
 	}
 	if !reflect.DeepEqual(jobSpec.TrainingInput.Args, wantArgs) {
 		t.Errorf("Args attached to job did not match expected args")
+	}
+}
+
+func TestTrainer_VersionSpec(t *testing.T) {
+
+	tr := &Trainer{
+		ModelPath: "moonbird-models/predictor",
+	}
+	versionSpec := tr.newTrainVersionSpec(500)
+
+	wantVersionName := "v500"
+	if versionSpec.Name != wantVersionName {
+		t.Errorf("Expected job ID %s, got %s", wantVersionName, versionSpec.Name)
+	}
+
+	wantDeploymentUri := "gs://moonbird-models/predictor/500/saved_model/"
+	if versionSpec.DeploymentUri != wantDeploymentUri {
+		t.Errorf("Expected version URI %s, got %s", wantDeploymentUri, versionSpec.DeploymentUri)
+	}
+
+	wanRuntimeVersion := "1.12"
+	if versionSpec.RuntimeVersion != wanRuntimeVersion {
+		t.Errorf("Expected runtime version %s, got %s", wanRuntimeVersion, versionSpec.RuntimeVersion)
+	}
+}
+
+func TestTrainer_WaitForJob_Success(t *testing.T) {
+	var totalSleep time.Duration
+
+	callCount := 0
+	client := &http.Client{
+		Transport: &testRoundTripper{
+			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+				wantPath := "/v1/predictor_500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				if totalSleep < 4*time.Second {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"RUNNING"}`))
+				} else {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"SUCCEEDED"}`))
+				}
+				callCount++
+
+				return resp, nil
+			},
+		},
+	}
+
+	tr := &Trainer{
+		SleepFunc: func(d time.Duration) {
+			wantSleep := 500 * time.Millisecond
+			if d != wantSleep {
+				t.Errorf("Wrong sleep duration; expected %d, got %d", wantSleep, d)
+			}
+			totalSleep += d
+		},
+	}
+
+	err := tr.waitForTrainJob("predictor_500", client)
+	if err != nil {
+		t.Errorf("Expected nil err from update, got non-nil err: %s", err)
+	}
+
+	wantCallCount := 9
+	if callCount != wantCallCount {
+		t.Errorf("Expected call count before returning %d, got %d", wantCallCount, callCount)
+	}
+}
+
+func TestTrainer_WaitForJob_Failed(t *testing.T) {
+	var totalSleep time.Duration
+
+	callCount := 0
+	client := &http.Client{
+		Transport: &testRoundTripper{
+			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+				wantPath := "/v1/predictor_500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				if totalSleep < 4*time.Second {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"RUNNING"}`))
+				} else {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"FAILED"}`))
+				}
+				callCount++
+
+				return resp, nil
+			},
+		},
+	}
+
+	tr := &Trainer{
+		SleepFunc: func(d time.Duration) {
+			wantSleep := 500 * time.Millisecond
+			if d != wantSleep {
+				t.Errorf("Wrong sleep duration; expected %d, got %d", wantSleep, d)
+			}
+			totalSleep += d
+		},
+	}
+
+	err := tr.waitForTrainJob("predictor_500", client)
+	if err == nil {
+		t.Errorf("Expected non-nil err from update, got nil")
+	}
+
+	wantCallCount := 9
+	if callCount != wantCallCount {
+		t.Errorf("Expected call count before returning %d, got %d", wantCallCount, callCount)
+	}
+}
+
+func TestTrainer_WaitForJob_Cancelled(t *testing.T) {
+	var totalSleep time.Duration
+
+	callCount := 0
+	client := &http.Client{
+		Transport: &testRoundTripper{
+			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+				wantPath := "/v1/predictor_500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				if totalSleep < 4*time.Second {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"RUNNING"}`))
+				} else {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"CANCELLED"}`))
+				}
+				callCount++
+
+				return resp, nil
+			},
+		},
+	}
+
+	tr := &Trainer{
+		SleepFunc: func(d time.Duration) {
+			wantSleep := 500 * time.Millisecond
+			if d != wantSleep {
+				t.Errorf("Wrong sleep duration; expected %d, got %d", wantSleep, d)
+			}
+			totalSleep += d
+		},
+	}
+
+	err := tr.waitForTrainJob("predictor_500", client)
+	if err == nil {
+		t.Errorf("Expected non-nil err from update, got nil")
+	}
+
+	wantCallCount := 9
+	if callCount != wantCallCount {
+		t.Errorf("Expected call count before returning %d, got %d", wantCallCount, callCount)
+	}
+}
+
+func TestTrainer_WaitForVersion_Success(t *testing.T) {
+	var totalSleep time.Duration
+
+	callCount := 0
+	client := &http.Client{
+		Transport: &testRoundTripper{
+			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				if totalSleep < 4*time.Second {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"CREATING"}`))
+				} else {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"READY"}`))
+				}
+				callCount++
+
+				return resp, nil
+			},
+		},
+	}
+
+	tr := &Trainer{
+		SleepFunc: func(d time.Duration) {
+			wantSleep := 500 * time.Millisecond
+			if d != wantSleep {
+				t.Errorf("Wrong sleep duration; expected %d, got %d", wantSleep, d)
+			}
+			totalSleep += d
+		},
+	}
+
+	err := tr.waitForVersionReady("v500", client)
+	if err != nil {
+		t.Errorf("Expected nil err from update, got %s", err)
+	}
+
+	wantCallCount := 9
+	if callCount != wantCallCount {
+		t.Errorf("Expected call count before returning %d, got %d", wantCallCount, callCount)
+	}
+}
+
+func TestTrainer_WaitForVersion_Failed(t *testing.T) {
+	var totalSleep time.Duration
+
+	callCount := 0
+	client := &http.Client{
+		Transport: &testRoundTripper{
+			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				if req.URL.Path != wantPath {
+					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
+				}
+
+				wantHost := "ml.googleapis.com"
+				if req.URL.Host != wantHost {
+					t.Errorf("Wrong URL host; expected %s, got %s", wantHost, req.URL.Host)
+				}
+
+				wantMethod := "GET"
+				if req.Method != wantMethod {
+					t.Errorf("Expected method %s, got %s", wantMethod, req.Method)
+				}
+
+				resp := new(http.Response)
+				resp.StatusCode = 200
+				resp.ContentLength = -1
+				if totalSleep < 4*time.Second {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"CREATING"}`))
+				} else {
+					resp.Body = ioutil.NopCloser(strings.NewReader(`{"State":"FAILED"}`))
+				}
+				callCount++
+
+				return resp, nil
+			},
+		},
+	}
+
+	tr := &Trainer{
+		SleepFunc: func(d time.Duration) {
+			wantSleep := 500 * time.Millisecond
+			if d != wantSleep {
+				t.Errorf("Wrong sleep duration; expected %d, got %d", wantSleep, d)
+			}
+			totalSleep += d
+		},
+	}
+
+	err := tr.waitForVersionReady("v500", client)
+	if err == nil {
+		t.Errorf("Expected non-nil err from update, got nil")
+	}
+
+	wantCallCount := 9
+	if callCount != wantCallCount {
+		t.Errorf("Expected call count before returning %d, got %d", wantCallCount, callCount)
 	}
 }

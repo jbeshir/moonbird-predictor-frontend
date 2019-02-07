@@ -25,6 +25,7 @@ type Trainer struct {
 	ModelPath        string
 	DataPath         string
 	TrainPackage     string
+	SleepFunc        func(time.Duration)
 }
 
 func (tr *Trainer) Retrain(ctx context.Context, client *http.Client, now time.Time) error {
@@ -121,6 +122,29 @@ func (tr *Trainer) Retrain(ctx context.Context, client *http.Client, now time.Ti
 
 	createCall := mlService.Projects.Jobs.Create("", tr.newTrainJobSpec(status.LatestModel, newModel))
 	_, err = createCall.Do()
+	if err != nil {
+		return err
+	}
+
+	err = tr.waitForTrainJob("predictor_"+strconv.FormatInt(newModel, 10), client)
+	if err != nil {
+		return err
+	}
+
+	versionCall := mlService.Projects.Models.Versions.Create("projects/Moonbird/models/Predictor", tr.newTrainVersionSpec(newModel))
+	_, err = versionCall.Do()
+	if err != nil {
+		return err
+	}
+
+	err = tr.waitForVersionReady("v"+strconv.FormatInt(newModel, 10), client)
+	if err != nil {
+		return err
+	}
+
+	versionDefaultCall := mlService.Projects.Models.Versions.SetDefault("projects/Moonbird/models/Predictor/versions/v"+strconv.FormatInt(newModel, 10),
+		&ml.GoogleCloudMlV1__SetDefaultVersionRequest{})
+	_, err = versionDefaultCall.Do()
 	if err != nil {
 		return err
 	}
@@ -298,5 +322,64 @@ func (tr *Trainer) newTrainJobSpec(oldModel, newModel int64) *ml.GoogleCloudMlV1
 				tr.TrainPackage,
 			},
 		},
+	}
+}
+
+func (tr *Trainer) newTrainVersionSpec(model int64) *ml.GoogleCloudMlV1__Version {
+	return &ml.GoogleCloudMlV1__Version{
+		Name:           "v" + strconv.FormatInt(model, 10),
+		DeploymentUri:  "gs://" + tr.ModelPath + "/" + strconv.FormatInt(model, 10) + "/saved_model/",
+		RuntimeVersion: "1.12",
+	}
+}
+
+func (tr *Trainer) waitForTrainJob(jobID string, client *http.Client) error {
+
+	mlService, err := ml.New(client)
+	if err != nil {
+		return err
+	}
+
+	for {
+		jobCall := mlService.Projects.Jobs.Get(jobID)
+		job, err := jobCall.Do()
+		if err != nil {
+			return err
+		}
+		if job.State == "FAILED" {
+			return errors.New("job failed")
+		}
+		if job.State == "CANCELLED" {
+			return errors.New("job cancelled")
+		}
+		if job.State == "SUCCEEDED" {
+			return nil
+		}
+
+		tr.SleepFunc(500 * time.Millisecond)
+	}
+}
+
+func (tr *Trainer) waitForVersionReady(version string, client *http.Client) error {
+
+	mlService, err := ml.New(client)
+	if err != nil {
+		return err
+	}
+
+	for {
+		versionCall := mlService.Projects.Models.Versions.Get("projects/Moonbird/models/Predictor/versions/" + version)
+		version, err := versionCall.Do()
+		if err != nil {
+			return err
+		}
+		if version.State == "FAILED" {
+			return errors.New("job failed")
+		}
+		if version.State == "READY" {
+			return nil
+		}
+
+		tr.SleepFunc(500 * time.Millisecond)
 	}
 }
