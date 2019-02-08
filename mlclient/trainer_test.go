@@ -16,6 +16,7 @@ import (
 )
 
 func TestTrainer_Retrain(t *testing.T) {
+	t.Parallel()
 
 	now := time.Unix(500, 0)
 	step := 0
@@ -285,13 +286,6 @@ func TestTrainer_Retrain(t *testing.T) {
 			}, nil
 	}
 
-	ctx := context.Background()
-	tr := &Trainer{
-		PersistentStore:  ps,
-		FileStore:        fs,
-		PredictionSource: s,
-	}
-
 	client := new(http.Client)
 	client.Transport = &testRoundTripper{
 		RoundTripFunc: func(req *http.Request) (*http.Response, error) {
@@ -425,7 +419,19 @@ func TestTrainer_Retrain(t *testing.T) {
 		},
 	}
 
-	err := tr.Retrain(ctx, client, now)
+	cm := newTestHttpClientMaker(t)
+	cm.MakeClientFunc = func(ctx context.Context) (*http.Client, error) {
+		return client, nil
+	}
+	ctx := context.Background()
+	tr := &Trainer{
+		PersistentStore:  ps,
+		FileStore:        fs,
+		PredictionSource: s,
+		HttpClientMaker:  cm,
+	}
+
+	err := tr.Retrain(ctx, now)
 
 	if err != nil {
 		t.Errorf("Expected err to be nil, was %s", err.Error())
@@ -438,6 +444,7 @@ func TestTrainer_Retrain(t *testing.T) {
 }
 
 func TestTrainer_RetrieveNewAndOutstanding(t *testing.T) {
+	t.Parallel()
 
 	now := time.Unix(500, 0)
 	step := 0
@@ -524,6 +531,7 @@ func TestTrainer_RetrieveNewAndOutstanding(t *testing.T) {
 }
 
 func TestTrainer_RetrieveNewAndOutstanding_Deduplicate(t *testing.T) {
+	t.Parallel()
 
 	now := time.Unix(500, 0)
 	step := 0
@@ -593,6 +601,8 @@ func TestTrainer_RetrieveNewAndOutstanding_Deduplicate(t *testing.T) {
 }
 
 func TestTrainer_DivideSummaries(t *testing.T) {
+	t.Parallel()
+
 	r := rand.NewSource(42)
 	var summaries []*predictions.PredictionSummary
 	for i := int64(0); i < 100; i++ {
@@ -629,6 +639,8 @@ func TestTrainer_DivideSummaries(t *testing.T) {
 }
 
 func TestTrainer_UpdateLatestModel(t *testing.T) {
+	t.Parallel()
+
 	step := 0
 	ps := testhelpers.NewPersistentStore(t)
 	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
@@ -717,6 +729,8 @@ func TestTrainer_UpdateLatestModel(t *testing.T) {
 }
 
 func TestTrainer_UpdateLatestModel_Conflict(t *testing.T) {
+	t.Parallel()
+
 	step := 0
 	ps := testhelpers.NewPersistentStore(t)
 	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
@@ -777,6 +791,7 @@ func TestTrainer_UpdateLatestModel_Conflict(t *testing.T) {
 }
 
 func TestTrainer_JobSpec(t *testing.T) {
+	t.Parallel()
 
 	tr := &Trainer{
 		ModelPath:    "moonbird-models/predictor",
@@ -829,6 +844,7 @@ func TestTrainer_JobSpec(t *testing.T) {
 }
 
 func TestTrainer_VersionSpec(t *testing.T) {
+	t.Parallel()
 
 	tr := &Trainer{
 		ModelPath: "moonbird-models/predictor",
@@ -852,6 +868,8 @@ func TestTrainer_VersionSpec(t *testing.T) {
 }
 
 func TestTrainer_WaitForJob_Success(t *testing.T) {
+	t.Parallel()
+
 	var totalSleep time.Duration
 
 	callCount := 0
@@ -910,6 +928,8 @@ func TestTrainer_WaitForJob_Success(t *testing.T) {
 }
 
 func TestTrainer_WaitForJob_Failed(t *testing.T) {
+	t.Parallel()
+
 	var totalSleep time.Duration
 
 	callCount := 0
@@ -968,6 +988,8 @@ func TestTrainer_WaitForJob_Failed(t *testing.T) {
 }
 
 func TestTrainer_WaitForJob_Cancelled(t *testing.T) {
+	t.Parallel()
+
 	var totalSleep time.Duration
 
 	callCount := 0
@@ -1026,6 +1048,8 @@ func TestTrainer_WaitForJob_Cancelled(t *testing.T) {
 }
 
 func TestTrainer_WaitForVersion_Success(t *testing.T) {
+	t.Parallel()
+
 	var totalSleep time.Duration
 
 	callCount := 0
@@ -1084,6 +1108,8 @@ func TestTrainer_WaitForVersion_Success(t *testing.T) {
 }
 
 func TestTrainer_WaitForVersion_Failed(t *testing.T) {
+	t.Parallel()
+
 	var totalSleep time.Duration
 
 	callCount := 0

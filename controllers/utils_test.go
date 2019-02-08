@@ -5,6 +5,7 @@ import (
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"net/http"
 	"testing"
+	"time"
 )
 
 func newTestContextMaker(t *testing.T) *testContextMaker {
@@ -65,4 +66,21 @@ type testPredictionMaker struct {
 
 func (pm *testPredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
 	return pm.PredictFunc(ctx, predictions)
+}
+
+func newTestModelTrainer(t *testing.T) *testModelTrainer {
+	return &testModelTrainer{
+		RetrainFunc: func(ctx context.Context, now time.Time) error {
+			t.Error("RetrainFunc should not be called")
+			return nil
+		},
+	}
+}
+
+type testModelTrainer struct {
+	RetrainFunc func(ctx context.Context, now time.Time) error
+}
+
+func (tr *testModelTrainer) Retrain(ctx context.Context, now time.Time) error {
+	return tr.RetrainFunc(ctx, now)
 }

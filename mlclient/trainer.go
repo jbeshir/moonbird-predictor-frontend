@@ -26,11 +26,17 @@ type Trainer struct {
 	DataPath         string
 	TrainPackage     string
 	SleepFunc        func(time.Duration)
+	HttpClientMaker  HttpClientMaker
 }
 
-func (tr *Trainer) Retrain(ctx context.Context, client *http.Client, now time.Time) error {
+func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	newModel := now.Unix()
 	newModelStr := strconv.FormatInt(newModel, 10)
+
+	client, err := tr.HttpClientMaker.MakeClient(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Get the current version of the model; this provides us with the path to the data it was based on,
 	// and tells us what time we need to incorporate predictions from after.

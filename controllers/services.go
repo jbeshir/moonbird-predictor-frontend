@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"net/http"
+	"time"
 )
 
 type ContextMaker interface {
@@ -17,4 +18,8 @@ type PredictionMaker interface {
 type ExampleLister interface {
 	GetExamples(ctx context.Context) (data.ExamplePredictions, error)
 	UpdateExamples(ctx context.Context) (data.ExamplePredictions, error)
+}
+
+type ModelTrainer interface {
+	Retrain(ctx context.Context, now time.Time) error
 }
