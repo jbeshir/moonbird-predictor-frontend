@@ -1,15 +1,17 @@
 module github.com/jbeshir/moonbird-predictor-frontend
 
 require (
-	cloud.google.com/go v0.32.0 // indirect
+	cloud.google.com/go v0.34.0
 	github.com/PuerkitoBio/goquery v1.5.0
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190130183601-4a3603005f34
 	github.com/pkg/errors v0.8.0
-	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
-	golang.org/x/oauth2 v0.0.0-20181106182150-f42d05182288
-	golang.org/x/sync v0.0.0-20181108010431-42b317875d0f // indirect
+	go.opencensus.io v0.19.0 // indirect
+	golang.org/x/net v0.0.0-20181217023233-e147a9138326
+	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
-	google.golang.org/api v0.0.0-20181108001712-cfbc873f6b93
+	google.golang.org/api v0.0.0-20181220000619-583d854617af
 	google.golang.org/appengine v1.3.0
+	google.golang.org/genproto v0.0.0-20190201180003-4b09977fb922 // indirect
+	google.golang.org/grpc v1.18.0 // indirect
 )
