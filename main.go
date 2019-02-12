@@ -10,10 +10,12 @@ import (
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"golang.org/x/time/rate"
 	"google.golang.org/api/ml/v1"
+	"google.golang.org/api/storage/v1"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/memcache"
 	"net/http"
 	"os"
+	"time"
 )
 
 func main() {
@@ -46,7 +48,9 @@ func main() {
 			Codec:  aengine.BinaryMemcacheCodec,
 		},
 		HttpClientMaker: &aengine.AuthenticatedClientMaker{
-			Scope: ml.CloudPlatformScope,
+			Scope: []string{
+				ml.CloudPlatformScope,
+			},
 		},
 	}
 
@@ -57,13 +61,38 @@ func main() {
 	indexResponder := &responders.WebIndexResponder{}
 	http.Handle("/", indexController.HandleFunc(contextMaker, indexResponder))
 
+	cronResponder := &responders.WebSimpleResponder{
+		ExposeErrors: true,
+	}
+
 	pbUpdateController := &controllers.ExamplesUpdate{
 		ExampleLister: exampleLister,
 	}
-	pbUpdateResponder := &responders.WebSimpleResponder{
-		ExposeErrors: true,
+	http.Handle("/cron/pb-update", pbUpdateController.HandleFunc(contextMaker, cronResponder))
+
+	modelTrainer := &mlclient.Trainer{
+		PersistentStore: &aengine.PersistentStore{
+			Prefix: "model-",
+		},
+		FileStore: &aengine.GcsFileStore{
+			Bucket: "moonbird-data",
+			Prefix: "predictor/",
+		},
+		ModelPath:    "moonbird-models/predictor",
+		DataPath:     "moonbird-data/predictor",
+		SleepFunc:    time.Sleep,
+		TrainPackage: "gs://moonbird-models/predictor/trainer.tar.gz",
+		HttpClientMaker: &aengine.AuthenticatedClientMaker{
+			Scope: []string{
+				ml.CloudPlatformScope,
+				storage.CloudPlatformScope,
+			},
+		},
 	}
-	http.Handle("/cron/pb-update", pbUpdateController.HandleFunc(contextMaker, pbUpdateResponder))
+	mlRetrainController := &controllers.ModelRetrain{
+		Trainer: modelTrainer,
+	}
+	http.Handle("/cron/ml-retrain", mlRetrainController.HandleFunc(contextMaker, cronResponder))
 
 	appengine.Main()
 }
