@@ -1,0 +1,11 @@
+runtime: go111
+service: predictor-frontend
+
+handlers:
+- url: /static
+  static_dir: static
+- url: /cron/.*
+  script: auto
+  login: admin
+- url: /.*
+  script: auto

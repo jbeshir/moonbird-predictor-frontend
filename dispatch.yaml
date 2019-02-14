@@ -1,0 +1,5 @@
+dispatch:
+  - url: "predictor.moonbird.io/"
+    service: predictor-frontend
+  - url: "*/static/moonbird.css"
+    service: predictor-frontend
