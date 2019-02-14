@@ -28,11 +28,11 @@ func main() {
 		Namespace: "moonbird-predictor-frontend",
 	}
 
-	exampleSource := predictions.NewSource(
+	pbSource := predictions.NewSource(
 		htmlfetcher.NewFetcher(rate.NewLimiter(1, 2), 2),
 		"https://predictionbook.com")
 	exampleLister := &pbook.Lister{
-		PredictionSource: exampleSource,
+		PredictionSource: pbSource,
 		CacheStore: &aengine.CacheStore{
 			Prefix: "pbook-",
 			Codec:  memcache.Gob,
@@ -78,10 +78,11 @@ func main() {
 			Bucket: "moonbird-data",
 			Prefix: "predictor/",
 		},
-		ModelPath:    "moonbird-models/predictor",
-		DataPath:     "moonbird-data/predictor",
-		SleepFunc:    time.Sleep,
-		TrainPackage: "gs://moonbird-models/predictor/trainer.tar.gz",
+		PredictionSource: pbSource,
+		ModelPath:        "moonbird-models/predictor",
+		DataPath:         "moonbird-data/predictor",
+		SleepFunc:        time.Sleep,
+		TrainPackage:     "gs://moonbird-models/predictor/trainer.tar.gz",
 		HttpClientMaker: &aengine.AuthenticatedClientMaker{
 			Scope: []string{
 				ml.CloudPlatformScope,
