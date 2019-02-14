@@ -290,8 +290,8 @@ func TestTrainer_Retrain(t *testing.T) {
 	client.Transport = &testRoundTripper{
 		RoundTripFunc: func(req *http.Request) (*http.Response, error) {
 			if step == 9 {
-				wantPath := "/v1//jobs"
-				if req.URL.Path != "/v1//jobs" {
+				wantPath := "/v1/projects/moonbird-beshir/jobs"
+				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
 
@@ -319,7 +319,7 @@ func TestTrainer_Retrain(t *testing.T) {
 				step++
 				return resp, nil
 			} else if step == 10 {
-				wantPath := "/v1/predictor_500"
+				wantPath := "/v1/projects/moonbird-beshir/jobs/predictor_500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -342,7 +342,7 @@ func TestTrainer_Retrain(t *testing.T) {
 				step++
 				return resp, nil
 			} else if step == 11 {
-				wantPath := "/v1/projects/Moonbird/models/Predictor/versions"
+				wantPath := "/v1/projects/moonbird-beshir/models/Predictor/versions"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -371,7 +371,7 @@ func TestTrainer_Retrain(t *testing.T) {
 				step++
 				return resp, nil
 			} else if step == 12 {
-				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				wantPath := "/v1/projects/moonbird-beshir/models/Predictor/versions/v500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -394,7 +394,7 @@ func TestTrainer_Retrain(t *testing.T) {
 				step++
 				return resp, nil
 			} else if step == 13 {
-				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500:setDefault"
+				wantPath := "/v1/projects/moonbird-beshir/models/Predictor/versions/v500:setDefault"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -830,6 +830,11 @@ func TestTrainer_JobSpec(t *testing.T) {
 		t.Errorf("Expected package URI %s, got %s", wantPackageUri, jobSpec.TrainingInput.PackageUris[0])
 	}
 
+	wantRegion := "us-east1"
+	if jobSpec.TrainingInput.Region != wantRegion {
+		t.Errorf("Expected region %s, got %s", wantRegion, jobSpec.TrainingInput.Region)
+	}
+
 	wantArgs := []string{
 		"--train-file",
 		"gs://moonbird-data/predictor/500/",
@@ -876,7 +881,7 @@ func TestTrainer_WaitForJob_Success(t *testing.T) {
 	client := &http.Client{
 		Transport: &testRoundTripper{
 			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-				wantPath := "/v1/predictor_500"
+				wantPath := "/v1/projects/moonbird-beshir/jobs/predictor_500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -936,7 +941,7 @@ func TestTrainer_WaitForJob_Failed(t *testing.T) {
 	client := &http.Client{
 		Transport: &testRoundTripper{
 			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-				wantPath := "/v1/predictor_500"
+				wantPath := "/v1/projects/moonbird-beshir/jobs/predictor_500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -996,7 +1001,7 @@ func TestTrainer_WaitForJob_Cancelled(t *testing.T) {
 	client := &http.Client{
 		Transport: &testRoundTripper{
 			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-				wantPath := "/v1/predictor_500"
+				wantPath := "/v1/projects/moonbird-beshir/jobs/predictor_500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -1056,7 +1061,7 @@ func TestTrainer_WaitForVersion_Success(t *testing.T) {
 	client := &http.Client{
 		Transport: &testRoundTripper{
 			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				wantPath := "/v1/projects/moonbird-beshir/models/Predictor/versions/v500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}
@@ -1116,7 +1121,7 @@ func TestTrainer_WaitForVersion_Failed(t *testing.T) {
 	client := &http.Client{
 		Transport: &testRoundTripper{
 			RoundTripFunc: func(req *http.Request) (*http.Response, error) {
-				wantPath := "/v1/projects/Moonbird/models/Predictor/versions/v500"
+				wantPath := "/v1/projects/moonbird-beshir/models/Predictor/versions/v500"
 				if req.URL.Path != wantPath {
 					t.Errorf("Wrong URL path; expected %s, got %s", wantPath, req.URL.Path)
 				}

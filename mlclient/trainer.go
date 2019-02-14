@@ -35,7 +35,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 	client, err := tr.HttpClientMaker.MakeClient(ctx)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	// Get the current version of the model; this provides us with the path to the data it was based on,
@@ -50,7 +50,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	// Retrieve and save out the responses to the newly resolved predictions.
 	newSummaries, responses, err := tr.PredictionSource.AllPredictionResponses(ctx, potentiallyResolved)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	var resolvedSummaries []*predictions.PredictionSummary
@@ -87,12 +87,12 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	csvWriter.Flush()
 	err = csvWriter.Error()
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	err = tr.FileStore.Save(ctx, strconv.FormatInt(now.Unix(), 10)+"/responsedata.csv", buf.Bytes())
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	unresolvedRecords = append(unresolvedRecords, tr.generateSummaryRecords(unresolved)...)
@@ -104,29 +104,30 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-unresolved.csv", unresolvedRecords)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	train, cv, test := divideSummaries(rand.New(rand.NewSource(time.Now().Unix())), resolvedSummaries)
+
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-train.csv", tr.generateSummaryRecords(train))
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-cv.csv", tr.generateSummaryRecords(cv))
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-test.csv", tr.generateSummaryRecords(test))
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	mlService, err := ml.New(client)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
-	createCall := mlService.Projects.Jobs.Create("", tr.newTrainJobSpec(status.LatestModel, newModel))
+	createCall := mlService.Projects.Jobs.Create("projects/moonbird-beshir", tr.newTrainJobSpec(status.LatestModel, newModel))
 	_, err = createCall.Do()
 	if err != nil {
 		return err
@@ -134,30 +135,30 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 	err = tr.waitForTrainJob("predictor_"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
-	versionCall := mlService.Projects.Models.Versions.Create("projects/Moonbird/models/Predictor", tr.newTrainVersionSpec(newModel))
+	versionCall := mlService.Projects.Models.Versions.Create("projects/moonbird-beshir/models/Predictor", tr.newTrainVersionSpec(newModel))
 	_, err = versionCall.Do()
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	err = tr.waitForVersionReady("v"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
-	versionDefaultCall := mlService.Projects.Models.Versions.SetDefault("projects/Moonbird/models/Predictor/versions/v"+strconv.FormatInt(newModel, 10),
+	versionDefaultCall := mlService.Projects.Models.Versions.SetDefault("projects/moonbird-beshir/models/Predictor/versions/v"+strconv.FormatInt(newModel, 10),
 		&ml.GoogleCloudMlV1__SetDefaultVersionRequest{})
 	_, err = versionDefaultCall.Do()
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	err = tr.updateLatestModel(ctx, status.LatestModel, newModel)
 	if err != nil {
-		return err
+		return errors.New("retrain: " + err.Error())
 	}
 
 	return nil
@@ -327,6 +328,7 @@ func (tr *Trainer) newTrainJobSpec(oldModel, newModel int64) *ml.GoogleCloudMlV1
 			PackageUris: []string{
 				tr.TrainPackage,
 			},
+			Region: "us-east1",
 		},
 	}
 }
@@ -347,7 +349,7 @@ func (tr *Trainer) waitForTrainJob(jobID string, client *http.Client) error {
 	}
 
 	for {
-		jobCall := mlService.Projects.Jobs.Get(jobID)
+		jobCall := mlService.Projects.Jobs.Get("projects/moonbird-beshir/jobs/" + jobID)
 		job, err := jobCall.Do()
 		if err != nil {
 			return err
@@ -374,7 +376,7 @@ func (tr *Trainer) waitForVersionReady(version string, client *http.Client) erro
 	}
 
 	for {
-		versionCall := mlService.Projects.Models.Versions.Get("projects/Moonbird/models/Predictor/versions/" + version)
+		versionCall := mlService.Projects.Models.Versions.Get("projects/moonbird-beshir/models/Predictor/versions/" + version)
 		version, err := versionCall.Do()
 		if err != nil {
 			return err
