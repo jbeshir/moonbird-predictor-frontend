@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -34,9 +35,5 @@ func (c *ExamplesUpdate) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespo
 
 func (c *ExamplesUpdate) handle(ctx context.Context) error {
 	_, err := c.ExampleLister.UpdateExamples(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return errors.Wrap(err, "")
 }

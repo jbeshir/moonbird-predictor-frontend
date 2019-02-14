@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"errors"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
+	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
 	"math/rand"
 	"net/http"
@@ -35,14 +35,14 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 	client, err := tr.HttpClientMaker.MakeClient(ctx)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	// Get the current version of the model; this provides us with the path to the data it was based on,
 	// and tells us what time we need to incorporate predictions from after.
 	status := new(trainerStatus)
 	if err := tr.PersistentStore.GetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	potentiallyResolved, unresolved, unresolvedRecords, err := tr.retrieveNewAndOutstandingPredictions(ctx, status.LatestModel, now)
@@ -50,7 +50,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	// Retrieve and save out the responses to the newly resolved predictions.
 	newSummaries, responses, err := tr.PredictionSource.AllPredictionResponses(ctx, potentiallyResolved)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	var resolvedSummaries []*predictions.PredictionSummary
@@ -87,12 +87,12 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	csvWriter.Flush()
 	err = csvWriter.Error()
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	err = tr.FileStore.Save(ctx, strconv.FormatInt(now.Unix(), 10)+"/responsedata.csv", buf.Bytes())
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	unresolvedRecords = append(unresolvedRecords, tr.generateSummaryRecords(unresolved)...)
@@ -104,61 +104,61 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-unresolved.csv", unresolvedRecords)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	train, cv, test := divideSummaries(rand.New(rand.NewSource(time.Now().Unix())), resolvedSummaries)
 
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-train.csv", tr.generateSummaryRecords(train))
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-cv.csv", tr.generateSummaryRecords(cv))
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-test.csv", tr.generateSummaryRecords(test))
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	mlService, err := ml.New(client)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	createCall := mlService.Projects.Jobs.Create("projects/moonbird-beshir", tr.newTrainJobSpec(status.LatestModel, newModel))
 	_, err = createCall.Do()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	err = tr.waitForTrainJob("predictor_"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	versionCall := mlService.Projects.Models.Versions.Create("projects/moonbird-beshir/models/Predictor", tr.newTrainVersionSpec(newModel))
 	_, err = versionCall.Do()
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	err = tr.waitForVersionReady("v"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	versionDefaultCall := mlService.Projects.Models.Versions.SetDefault("projects/moonbird-beshir/models/Predictor/versions/v"+strconv.FormatInt(newModel, 10),
 		&ml.GoogleCloudMlV1__SetDefaultVersionRequest{})
 	_, err = versionDefaultCall.Do()
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	err = tr.updateLatestModel(ctx, status.LatestModel, newModel)
 	if err != nil {
-		return errors.New("retrain: " + err.Error())
+		return errors.Wrap(err, "")
 	}
 
 	return nil
@@ -167,18 +167,18 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 func (tr *Trainer) retrieveNewAndOutstandingPredictions(ctx context.Context, prevModel int64, now time.Time) (potentiallyResolved []*predictions.PredictionSummary, unresolved []*predictions.PredictionSummary, unresolvedRecords [][]string, err error) {
 	oldPredictionFile, err := tr.FileStore.Load(ctx, strconv.FormatInt(prevModel, 10)+"/summarydata-unresolved.csv")
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
 	newPredictions, err := tr.PredictionSource.AllPredictionsSince(ctx, time.Unix(prevModel, 0))
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
 	csvReader := csv.NewReader(bytes.NewReader(oldPredictionFile))
 	oldPredictionRecords, err := csvReader.ReadAll()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
 	potentiallyResolvedIds := make(map[int64]struct{})
@@ -197,12 +197,12 @@ func (tr *Trainer) retrieveNewAndOutstandingPredictions(ctx context.Context, pre
 	for _, prediction := range oldPredictionRecords {
 		deadlineUnix, err := strconv.ParseInt(prediction[2], 10, 64)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, errors.Wrap(err, "")
 		}
 
 		id, err := strconv.ParseInt(prediction[0], 10, 64)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, errors.Wrap(err, "")
 		}
 
 		if now.After(time.Unix(deadlineUnix, 0)) {
@@ -225,7 +225,7 @@ func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int
 	return tr.PersistentStore.Transact(ctx, func(ctx context.Context) error {
 		status := new(trainerStatus)
 		if err := tr.PersistentStore.GetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
-			return err
+			return errors.Wrap(err, "")
 		}
 		if status.LatestModel != oldModel {
 			return errors.New("concurrent latest model update")
@@ -233,7 +233,7 @@ func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int
 
 		status.LatestModel = newModel
 		if err := tr.PersistentStore.SetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
-			return err
+			return errors.Wrap(err, "")
 		}
 
 		return nil
@@ -292,18 +292,18 @@ func (tr *Trainer) writeCsv(ctx context.Context, path string, records [][]string
 
 		err := csvWriter.Write(r)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "")
 		}
 	}
 	csvWriter.Flush()
 	err := csvWriter.Error()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	err = tr.FileStore.Save(ctx, path, buf.Bytes())
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	return nil
@@ -345,14 +345,14 @@ func (tr *Trainer) waitForTrainJob(jobID string, client *http.Client) error {
 
 	mlService, err := ml.New(client)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	for {
 		jobCall := mlService.Projects.Jobs.Get("projects/moonbird-beshir/jobs/" + jobID)
 		job, err := jobCall.Do()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "")
 		}
 		if job.State == "FAILED" {
 			return errors.New("job failed")
@@ -372,14 +372,14 @@ func (tr *Trainer) waitForVersionReady(version string, client *http.Client) erro
 
 	mlService, err := ml.New(client)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "")
 	}
 
 	for {
 		versionCall := mlService.Projects.Models.Versions.Get("projects/moonbird-beshir/models/Predictor/versions/" + version)
 		version, err := versionCall.Do()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "")
 		}
 		if version.State == "FAILED" {
 			return errors.New("job failed")

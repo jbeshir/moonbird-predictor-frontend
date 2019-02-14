@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"net/http"
 	"time"
 )
@@ -35,9 +36,5 @@ func (c *ModelRetrain) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespond
 
 func (c *ModelRetrain) handle(ctx context.Context) error {
 	err := c.Trainer.Retrain(ctx, time.Now())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return errors.Wrap(err, "")
 }

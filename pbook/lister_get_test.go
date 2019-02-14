@@ -2,10 +2,10 @@ package pbook
 
 import (
 	"context"
-	"errors"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
+	"github.com/pkg/errors"
 	"reflect"
 	"testing"
 )

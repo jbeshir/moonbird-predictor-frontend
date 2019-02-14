@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
+	"github.com/pkg/errors"
 	"math"
 )
 
@@ -28,7 +29,7 @@ func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, erro
 
 	err = l.PersistentStore.GetOpaque(ctx, storeExamplesKind, storeExamplesKey, &examples)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 
 	l.CacheStore.Set(ctx, cacheExamplesKey, &examples)
@@ -39,7 +40,7 @@ func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, erro
 func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, error) {
 	summaries, _, err := l.PredictionSource.RetrievePredictionListPage(ctx, 1)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 
 	var unresolvedSummaries []*predictions.PredictionSummary
@@ -51,7 +52,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 
 	_, responses, err := l.PredictionSource.AllPredictionResponses(ctx, unresolvedSummaries)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 
 	var examples data.ExamplePredictions
@@ -69,7 +70,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 
 	err = l.PersistentStore.SetOpaque(ctx, storeExamplesKind, storeExamplesKey, &examples)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "")
 	}
 
 	l.CacheStore.Delete(ctx, cacheExamplesKey)
