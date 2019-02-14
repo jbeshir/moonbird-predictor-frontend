@@ -2,6 +2,7 @@ package pbook
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"github.com/pkg/errors"
@@ -32,29 +33,37 @@ func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, erro
 		return nil, errors.Wrap(err, "")
 	}
 
-	l.CacheStore.Set(ctx, cacheExamplesKey, &examples)
+	_ = l.CacheStore.Set(ctx, cacheExamplesKey, &examples)
 
 	return examples, nil
 }
 
 func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, error) {
+	logger := ctxlogrus.Get(ctx)
+
+	logger.Info("Retrieving first page of predictions from prediction source...")
 	summaries, _, err := l.PredictionSource.RetrievePredictionListPage(ctx, 1)
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
+	logger.Infof("Got %d predictions", len(summaries))
 
+	logger.Info("Splitting unresolved predictions from resolved...")
 	var unresolvedSummaries []*predictions.PredictionSummary
 	for _, s := range summaries {
 		if s.Outcome == predictions.Unknown {
 			unresolvedSummaries = append(unresolvedSummaries, s)
 		}
 	}
+	logger.Infof("Got %d unresolved predictions", len(unresolvedSummaries))
 
+	logger.Info("Retrieving unresolved prediction responses...")
 	_, responses, err := l.PredictionSource.AllPredictionResponses(ctx, unresolvedSummaries)
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
 
+	logger.Info("Building and saving new example predictions list.")
 	var examples data.ExamplePredictions
 	for i := range unresolvedSummaries {
 		example := data.ExamplePrediction{
@@ -73,7 +82,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 		return nil, errors.Wrap(err, "")
 	}
 
-	l.CacheStore.Delete(ctx, cacheExamplesKey)
+	_ = l.CacheStore.Delete(ctx, cacheExamplesKey)
 
 	return examples, nil
 }

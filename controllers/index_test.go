@@ -50,9 +50,6 @@ func TestIndex_HandleFunc_NoExamples_NoAssignments(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		calledGetExamples = true
 		return nil, nil
 	}
@@ -116,9 +113,6 @@ func TestIndex_HandleFunc_NoExamples_Assignments(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		if !reflect.DeepEqual(predictions, []float64{0.1, 0.2}) {
 			t.Error("Unexpected prediction values")
 		}
@@ -180,9 +174,6 @@ func TestIndex_HandleFunc_NoExamples_JunkAssignments(t *testing.T) {
 	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
-		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
 		}
 		calledGetExamples = true
 		return nil, nil
@@ -249,9 +240,6 @@ func TestIndex_HandleFunc_NoExamples_Assignments_PredictErr(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		if !reflect.DeepEqual(predictions, []float64{0.1, 0.2}) {
 			t.Error("Unexpected prediction values")
 		}
@@ -313,9 +301,6 @@ func TestIndex_HandleFunc_ExamplesErr_NoAssignments(t *testing.T) {
 	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
-		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
 		}
 		calledGetExamples = true
 		return nil, errors.New("bluh")
@@ -387,9 +372,6 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		calledGetExamples = true
 		return []data.ExamplePrediction{
 			{
@@ -412,9 +394,6 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 		calledPredictCount++
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
-		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
 		}
 		if calledPredictCount == 1 {
 			if !reflect.DeepEqual(predictions, []float64{0.5, 0.7}) {

@@ -20,6 +20,10 @@ type ExampleLister interface {
 	UpdateExamples(ctx context.Context) (data.ExamplePredictions, error)
 }
 
+type PredictionCache interface {
+	Flush(ctx context.Context) error
+}
+
 type ModelTrainer interface {
 	Retrain(ctx context.Context, now time.Time) error
 }

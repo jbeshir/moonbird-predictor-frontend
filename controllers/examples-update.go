@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -12,7 +14,7 @@ type ExamplesUpdate struct {
 
 type WebExamplesUpdateResponder interface {
 	OnContextError(w http.ResponseWriter, err error)
-	OnError(w http.ResponseWriter, err error)
+	OnError(ctx context.Context, w http.ResponseWriter, err error)
 	OnSuccess(w http.ResponseWriter)
 }
 
@@ -26,7 +28,7 @@ func (c *ExamplesUpdate) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespo
 
 		err = c.handle(ctx)
 		if err != nil {
-			resp.OnError(w, err)
+			resp.OnError(ctx, w, err)
 		} else {
 			resp.OnSuccess(w)
 		}
@@ -34,6 +36,10 @@ func (c *ExamplesUpdate) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespo
 }
 
 func (c *ExamplesUpdate) handle(ctx context.Context) error {
+	ctx = ctxlogrus.WithFields(ctx, logrus.Fields{
+		"controller": "ExamplesUpdate",
+	})
+
 	_, err := c.ExampleLister.UpdateExamples(ctx)
 	return errors.Wrap(err, "")
 }

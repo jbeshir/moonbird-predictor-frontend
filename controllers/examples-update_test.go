@@ -19,9 +19,6 @@ func TestExamplesUpdate_HandleFunc_Success(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		calledUpdateExamples = true
 		return nil, nil
 	}
@@ -92,16 +89,13 @@ func TestExamplesUpdate_HandleFunc_UpdateError(t *testing.T) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if ctx != createdContext {
-			t.Error("Got context that didn't match one we created")
-		}
 		calledUpdateExamples = true
 		return nil, errors.New("bluh")
 	}
 
 	calledOnError := false
 	r := newTestWebExamplesUpdateResponder(t)
-	r.OnErrorFunc = func(w http.ResponseWriter, err error) {
+	r.OnErrorFunc = func(ctx context.Context, w http.ResponseWriter, err error) {
 		calledOnError = true
 		if err == nil {
 			t.Error("Expected non-nil error in OnError, got nil error")
@@ -133,7 +127,7 @@ func newTestWebExamplesUpdateResponder(t *testing.T) *testWebExamplesUpdateRespo
 		OnContextErrorFunc: func(w http.ResponseWriter, err error) {
 			t.Error("OnContextErrorFunc should not be called")
 		},
-		OnErrorFunc: func(w http.ResponseWriter, err error) {
+		OnErrorFunc: func(ctx context.Context, w http.ResponseWriter, err error) {
 			t.Error("OnErrorFunc should not be called")
 		},
 		OnSuccessFunc: func(w http.ResponseWriter) {
@@ -144,7 +138,7 @@ func newTestWebExamplesUpdateResponder(t *testing.T) *testWebExamplesUpdateRespo
 
 type testWebExamplesUpdateResponder struct {
 	OnContextErrorFunc func(w http.ResponseWriter, err error)
-	OnErrorFunc        func(w http.ResponseWriter, err error)
+	OnErrorFunc        func(ctx context.Context, w http.ResponseWriter, err error)
 	OnSuccessFunc      func(w http.ResponseWriter)
 }
 
@@ -152,8 +146,8 @@ func (r *testWebExamplesUpdateResponder) OnContextError(w http.ResponseWriter, e
 	r.OnContextErrorFunc(w, err)
 }
 
-func (r *testWebExamplesUpdateResponder) OnError(w http.ResponseWriter, err error) {
-	r.OnErrorFunc(w, err)
+func (r *testWebExamplesUpdateResponder) OnError(ctx context.Context, w http.ResponseWriter, err error) {
+	r.OnErrorFunc(ctx, w, err)
 }
 
 func (r *testWebExamplesUpdateResponder) OnSuccess(w http.ResponseWriter) {

@@ -1,7 +1,9 @@
 package responders
 
 import (
+	"context"
 	"fmt"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"net/http"
 )
 
@@ -17,7 +19,10 @@ func (r *WebSimpleResponder) OnContextError(w http.ResponseWriter, err error) {
 	}
 }
 
-func (r *WebSimpleResponder) OnError(w http.ResponseWriter, err error) {
+func (r *WebSimpleResponder) OnError(ctx context.Context, w http.ResponseWriter, err error) {
+	l := ctxlogrus.Get(ctx)
+	l.Error(err)
+
 	if r.ExposeErrors {
 		http.Error(w, fmt.Sprintf("Internal Server Error: %s", err), 500)
 	} else {

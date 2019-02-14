@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,6 +47,11 @@ func (c *Index) HandleFunc(cm ContextMaker, resp WebIndexResponder) http.Handler
 }
 
 func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
+	ctx = ctxlogrus.WithFields(ctx, logrus.Fields{
+		"controller": "Index",
+	})
+	l := ctxlogrus.Get(ctx)
+
 	var prediction *float64
 	var err error
 
@@ -70,6 +77,8 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 		p, err = c.PredictionMaker.Predict(ctx, assignments)
 		if err == nil {
 			prediction = &p
+		} else {
+			l.Errorf("Unable to generate requested prediction: %s", err)
 		}
 	}
 
@@ -82,6 +91,8 @@ func (c *Index) handle(ctx context.Context, input *IndexInput) *IndexResult {
 			exampleResult.Result, exampleResult.ResultErr = c.PredictionMaker.Predict(ctx, example.Assignments)
 			exampleResults = append(exampleResults, exampleResult)
 		}
+	} else {
+		l.Errorf("Unable to get example predictions: %s", listErr)
 	}
 
 	result := &IndexResult{

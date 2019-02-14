@@ -42,11 +42,12 @@ func main() {
 		},
 	}
 
+	predictionCacheStore := &aengine.CacheStore{
+		Prefix: "~",
+		Codec:  aengine.BinaryMemcacheCodec,
+	}
 	predictionMaker := &mlclient.PredictionMaker{
-		CacheStorage: &aengine.CacheStore{
-			Prefix: "~",
-			Codec:  aengine.BinaryMemcacheCodec,
-		},
+		CacheStorage: predictionCacheStore,
 		HttpClientMaker: &aengine.AuthenticatedClientMaker{
 			Scope: []string{
 				ml.CloudPlatformScope,
@@ -91,7 +92,8 @@ func main() {
 		},
 	}
 	mlRetrainController := &controllers.ModelRetrain{
-		Trainer: modelTrainer,
+		Trainer:         modelTrainer,
+		PredictionCache: predictionCacheStore,
 	}
 	http.Handle("/cron/ml-retrain", mlRetrainController.HandleFunc(contextMaker, cronResponder))
 

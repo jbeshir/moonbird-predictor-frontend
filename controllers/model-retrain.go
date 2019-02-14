@@ -2,18 +2,21 @@ package controllers
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
 )
 
 type ModelRetrain struct {
-	Trainer ModelTrainer
+	Trainer         ModelTrainer
+	PredictionCache PredictionCache
 }
 
 type WebModelRetrainResponder interface {
 	OnContextError(w http.ResponseWriter, err error)
-	OnError(w http.ResponseWriter, err error)
+	OnError(ctx context.Context, w http.ResponseWriter, err error)
 	OnSuccess(w http.ResponseWriter)
 }
 
@@ -27,7 +30,7 @@ func (c *ModelRetrain) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespond
 
 		err = c.handle(ctx)
 		if err != nil {
-			resp.OnError(w, err)
+			resp.OnError(ctx, w, err)
 		} else {
 			resp.OnSuccess(w)
 		}
@@ -35,6 +38,13 @@ func (c *ModelRetrain) HandleFunc(cm ContextMaker, resp WebExamplesUpdateRespond
 }
 
 func (c *ModelRetrain) handle(ctx context.Context) error {
+	ctx = ctxlogrus.WithFields(ctx, logrus.Fields{
+		"controller": "ModelRetrain",
+	})
+
 	err := c.Trainer.Retrain(ctx, time.Now())
-	return errors.Wrap(err, "")
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	return errors.Wrap(c.PredictionCache.Flush(ctx), "")
 }

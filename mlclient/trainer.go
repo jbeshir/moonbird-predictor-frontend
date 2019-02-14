@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
@@ -30,6 +31,8 @@ type Trainer struct {
 }
 
 func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
+	l := ctxlogrus.Get(ctx)
+
 	newModel := now.Unix()
 	newModelStr := strconv.FormatInt(newModel, 10)
 
@@ -46,13 +49,18 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	}
 
 	potentiallyResolved, unresolved, unresolvedRecords, err := tr.retrieveNewAndOutstandingPredictions(ctx, status.LatestModel, now)
+	l.Infof("Have %d potentially resolved, %d unresolved, and %d existing not due predictions",
+		len(potentiallyResolved), len(unresolved), len(unresolvedRecords))
 
 	// Retrieve and save out the responses to the newly resolved predictions.
+	l.Infof("Retrieving prediction responses and status for %d potentially resolved predictions",
+		len(potentiallyResolved))
 	newSummaries, responses, err := tr.PredictionSource.AllPredictionResponses(ctx, potentiallyResolved)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Sorting potentially resolved into newly resolved and still unresolved predictions...")
 	var resolvedSummaries []*predictions.PredictionSummary
 	for _, newSummary := range newSummaries {
 		if newSummary.Outcome != predictions.Unknown {
@@ -61,7 +69,10 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 			unresolved = append(unresolved, newSummary)
 		}
 	}
+	l.Infof("Now have %d newly resolved and %d still unresolved predictions", len(resolvedSummaries),
+		len(unresolved))
 
+	l.Info("Writing resolved prediction responses to CSV...")
 	var buf bytes.Buffer
 	csvWriter := csv.NewWriter(&buf)
 	for _, r := range responses {
@@ -102,12 +113,14 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 		return iId < jId
 	})
 
+	l.Infof("Writing %d total known outstanding prediction summaries to CSV...", len(unresolvedRecords))
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-unresolved.csv", unresolvedRecords)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
 	train, cv, test := divideSummaries(rand.New(rand.NewSource(time.Now().Unix())), resolvedSummaries)
+	l.Infof("Split newly resolved predictions into %d train, %d cv, %d test", len(train), len(cv), len(test))
 
 	err = tr.writeCsv(ctx, newModelStr+"/summarydata-train.csv", tr.generateSummaryRecords(train))
 	if err != nil {
@@ -127,28 +140,33 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Launching training job...")
 	createCall := mlService.Projects.Jobs.Create("projects/moonbird-beshir", tr.newTrainJobSpec(status.LatestModel, newModel))
 	_, err = createCall.Do()
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Waiting for training job...")
 	err = tr.waitForTrainJob("predictor_"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Creating new version...")
 	versionCall := mlService.Projects.Models.Versions.Create("projects/moonbird-beshir/models/Predictor", tr.newTrainVersionSpec(newModel))
 	_, err = versionCall.Do()
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Waiting for new version to be ready...")
 	err = tr.waitForVersionReady("v"+strconv.FormatInt(newModel, 10), client)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 
+	l.Info("Setting new version as default...")
 	versionDefaultCall := mlService.Projects.Models.Versions.SetDefault("projects/moonbird-beshir/models/Predictor/versions/v"+strconv.FormatInt(newModel, 10),
 		&ml.GoogleCloudMlV1__SetDefaultVersionRequest{})
 	_, err = versionDefaultCall.Do()
@@ -156,6 +174,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 		return errors.Wrap(err, "")
 	}
 
+	l.Infof("Updating latest model version to %d", newModel)
 	err = tr.updateLatestModel(ctx, status.LatestModel, newModel)
 	if err != nil {
 		return errors.Wrap(err, "")
@@ -165,22 +184,27 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 }
 
 func (tr *Trainer) retrieveNewAndOutstandingPredictions(ctx context.Context, prevModel int64, now time.Time) (potentiallyResolved []*predictions.PredictionSummary, unresolved []*predictions.PredictionSummary, unresolvedRecords [][]string, err error) {
+	l := ctxlogrus.Get(ctx)
+
 	oldPredictionFile, err := tr.FileStore.Load(ctx, strconv.FormatInt(prevModel, 10)+"/summarydata-unresolved.csv")
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
+	l.Debugf("Retrieving new predictions from source since %d", prevModel)
 	newPredictions, err := tr.PredictionSource.AllPredictionsSince(ctx, time.Unix(prevModel, 0))
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
+	l.Debug("Parsing old outstanding predictions...")
 	csvReader := csv.NewReader(bytes.NewReader(oldPredictionFile))
 	oldPredictionRecords, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, nil, nil, errors.Wrap(err, "")
 	}
 
+	l.Debug("Sorting potentially resolved and unresolved predictions apart...")
 	potentiallyResolvedIds := make(map[int64]struct{})
 	for _, p := range newPredictions {
 		if p.Outcome != predictions.Unknown {

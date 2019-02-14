@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
 	"strings"
@@ -15,6 +16,8 @@ type PredictionMaker struct {
 }
 
 func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (p float64, err error) {
+	l := ctxlogrus.Get(ctx)
+	l.Debugf("Predicting from inputs: %v", predictions)
 
 	cacheKey := generatePredictionCacheKey(predictions)
 	req, err := newMLRequest(predictions)
@@ -37,6 +40,7 @@ func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (
 		return 0, errors.Wrap(err, "makePrediction couldn't create service")
 	}
 
+	l.Info("Making predict call...")
 	mlPredictCall := s.Projects.Predict("projects/moonbird-beshir/models/Predictor", req)
 	r, err := mlPredictCall.Context(ctx).Do()
 	if err != nil {
@@ -46,6 +50,7 @@ func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (
 	var result result
 	_ = json.NewDecoder(strings.NewReader(r.Data)).Decode(&result)
 	if len(result.Predictions) != 1 || len(result.Predictions[0].Income) != 1 {
+		l.Warn("Got a malformed predict call response")
 		return 0, errors.New("makePrediction got malformed predict response: Did not get one and only one probability")
 	}
 	p = result.Predictions[0].Income[0]

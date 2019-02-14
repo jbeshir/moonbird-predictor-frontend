@@ -1,6 +1,7 @@
 package responders
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"net/http/httptest"
@@ -34,7 +35,7 @@ func TestWebSimpleResponder_OnError(t *testing.T) {
 	}
 
 	recorder := httptest.NewRecorder()
-	r.OnError(recorder, errors.New("bluh"))
+	r.OnError(context.Background(), recorder, errors.New("bluh"))
 
 	result := recorder.Result()
 	if result.StatusCode != 500 {
