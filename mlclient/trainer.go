@@ -264,34 +264,6 @@ func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int
 	})
 }
 
-func divideSummaries(rs rand.Source, summaries []*predictions.PredictionSummary) (train, cv, test []*predictions.PredictionSummary) {
-
-	cvSize := int(float64(len(summaries)) * 0.2)
-	testSize := cvSize
-	trainSize := len(summaries) - cvSize - testSize
-
-	summaries = append([]*predictions.PredictionSummary{}, summaries...)
-	r := rand.New(rs)
-	r.Shuffle(len(summaries), func(i, j int) { summaries[i], summaries[j] = summaries[j], summaries[i] })
-
-	train = summaries[:trainSize]
-	sort.Slice(train, func(i, j int) bool {
-		return train[i].Id < train[j].Id
-	})
-
-	cv = summaries[trainSize : trainSize+cvSize]
-	sort.Slice(cv, func(i, j int) bool {
-		return cv[i].Id < cv[j].Id
-	})
-
-	test = summaries[trainSize+cvSize:]
-	sort.Slice(test, func(i, j int) bool {
-		return test[i].Id < test[j].Id
-	})
-
-	return train, cv, test
-}
-
 func (tr *Trainer) generateSummaryRecords(summaries []*predictions.PredictionSummary) (records [][]string) {
 	for _, p := range summaries {
 		records = append(records, []string{
@@ -414,4 +386,32 @@ func (tr *Trainer) waitForVersionReady(version string, client *http.Client) erro
 
 		tr.SleepFunc(500 * time.Millisecond)
 	}
+}
+
+func divideSummaries(rs rand.Source, summaries []*predictions.PredictionSummary) (train, cv, test []*predictions.PredictionSummary) {
+
+	cvSize := int(float64(len(summaries)) * 0.2)
+	testSize := cvSize
+	trainSize := len(summaries) - cvSize - testSize
+
+	summaries = append([]*predictions.PredictionSummary{}, summaries...)
+	r := rand.New(rs)
+	r.Shuffle(len(summaries), func(i, j int) { summaries[i], summaries[j] = summaries[j], summaries[i] })
+
+	train = summaries[:trainSize]
+	sort.Slice(train, func(i, j int) bool {
+		return train[i].Id < train[j].Id
+	})
+
+	cv = summaries[trainSize : trainSize+cvSize]
+	sort.Slice(cv, func(i, j int) bool {
+		return cv[i].Id < cv[j].Id
+	})
+
+	test = summaries[trainSize+cvSize:]
+	sort.Slice(test, func(i, j int) bool {
+		return test[i].Id < test[j].Id
+	})
+
+	return train, cv, test
 }
