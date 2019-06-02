@@ -3,3 +3,5 @@ dispatch:
     service: predictor-frontend
   - url: "*/static/moonbird.css"
     service: predictor-frontend
+  - url: "talk.moonbird.io/"
+    service: talk-frontend

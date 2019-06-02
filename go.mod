@@ -3,6 +3,7 @@ module github.com/jbeshir/moonbird-predictor-frontend
 require (
 	cloud.google.com/go v0.34.0
 	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
 	github.com/pkg/errors v0.8.0
