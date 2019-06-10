@@ -97,7 +97,7 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 		setCallCount++
 		return nil
 	}
-	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.GetFunc = func(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error) {
 		if kind != storeExamplesKind {
 			t.Errorf("Reading from wrong store kind; expected %s, was %s", storeExamplesKind, kind)
 		}
@@ -112,7 +112,7 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 			*examples = testExamples
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	c := context.Background()
@@ -145,8 +145,8 @@ func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 	cs.GetFunc = func(ctx context.Context, key string, v interface{}) error {
 		return errors.New("nope")
 	}
-	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
-		return testErr
+	ps.GetFunc = func(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error) {
+		return nil, testErr
 	}
 
 	c := context.Background()

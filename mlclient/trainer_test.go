@@ -3,6 +3,7 @@ package mlclient
 import (
 	"context"
 	"encoding/json"
+	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"google.golang.org/api/ml/v1"
@@ -22,7 +23,7 @@ func TestTrainer_Retrain(t *testing.T) {
 	step := 0
 
 	ps := testhelpers.NewPersistentStore(t)
-	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.GetFunc = func(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error) {
 		wantKind := "TrainerStatus"
 		if kind != wantKind {
 			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
@@ -44,9 +45,9 @@ func TestTrainer_Retrain(t *testing.T) {
 		}
 		step++
 
-		return nil
+		return nil, nil
 	}
-	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.SetFunc = func(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error {
 		wantKind := "TrainerStatus"
 		if kind != wantKind {
 			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
@@ -81,7 +82,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		}
 		step++
 
-		f(ctx)
+		_ = f(ctx)
 
 		wantStep = 17
 		if step != wantStep {
@@ -643,7 +644,7 @@ func TestTrainer_UpdateLatestModel(t *testing.T) {
 
 	step := 0
 	ps := testhelpers.NewPersistentStore(t)
-	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.GetFunc = func(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error) {
 		wantKind := "TrainerStatus"
 		if kind != wantKind {
 			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
@@ -665,9 +666,9 @@ func TestTrainer_UpdateLatestModel(t *testing.T) {
 		}
 		step++
 
-		return nil
+		return nil, nil
 	}
-	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.SetFunc = func(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error {
 		wantKind := "TrainerStatus"
 		if kind != wantKind {
 			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
@@ -702,7 +703,7 @@ func TestTrainer_UpdateLatestModel(t *testing.T) {
 		}
 		step++
 
-		f(ctx)
+		_ = f(ctx)
 
 		wantStep = 3
 		if step != wantStep {
@@ -733,7 +734,7 @@ func TestTrainer_UpdateLatestModel_Conflict(t *testing.T) {
 
 	step := 0
 	ps := testhelpers.NewPersistentStore(t)
-	ps.GetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.GetFunc = func(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error) {
 		wantKind := "TrainerStatus"
 		if kind != wantKind {
 			t.Errorf("Expected retrieval to be of kind %s, was %s", wantKind, kind)
@@ -755,7 +756,7 @@ func TestTrainer_UpdateLatestModel_Conflict(t *testing.T) {
 		}
 		step++
 
-		return nil
+		return nil, nil
 	}
 	ps.TransactFunc = func(ctx context.Context, f func(ctx context.Context) error) error {
 		wantStep := 0

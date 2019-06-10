@@ -2,6 +2,7 @@ package mlclient
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"net/http"
 	"time"
@@ -13,8 +14,8 @@ type CacheStorage interface {
 }
 
 type PersistentStore interface {
-	GetOpaque(ctx context.Context, kind, key string, v interface{}) error
-	SetOpaque(ctx context.Context, kind, key string, v interface{}) error
+	Get(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error)
+	Set(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error
 	Transact(ctx context.Context, f func(ctx context.Context) error) error
 }
 

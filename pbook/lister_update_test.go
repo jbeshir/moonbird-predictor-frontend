@@ -69,7 +69,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 
 	storeSetCallCount := 0
 	var storeSetExamples data.ExamplePredictions
-	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.SetFunc = func(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error {
 		if kind != storeExamplesKind {
 			t.Errorf("Writing to wrong store kind; expected %s, was %s", storeExamplesKind, kind)
 		}
@@ -234,7 +234,7 @@ func TestLister_UpdateExamples_StoreErr(t *testing.T) {
 		return nil, testResponses, nil
 	}
 
-	ps.SetOpaqueFunc = func(ctx context.Context, kind, key string, v interface{}) error {
+	ps.SetFunc = func(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error {
 		return errors.New("nope")
 	}
 

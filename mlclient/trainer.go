@@ -44,7 +44,7 @@ func (tr *Trainer) Retrain(ctx context.Context, now time.Time) error {
 	// Get the current version of the model; this provides us with the path to the data it was based on,
 	// and tells us what time we need to incorporate predictions from after.
 	status := new(trainerStatus)
-	if err := tr.PersistentStore.GetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
+	if _, err := tr.PersistentStore.Get(ctx, "TrainerStatus", "status", status); err != nil {
 		return errors.Wrap(err, "")
 	}
 
@@ -248,7 +248,7 @@ func (tr *Trainer) retrieveNewAndOutstandingPredictions(ctx context.Context, pre
 func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int64) error {
 	return tr.PersistentStore.Transact(ctx, func(ctx context.Context) error {
 		status := new(trainerStatus)
-		if err := tr.PersistentStore.GetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
+		if _, err := tr.PersistentStore.Get(ctx, "TrainerStatus", "status", status); err != nil {
 			return errors.Wrap(err, "")
 		}
 		if status.LatestModel != oldModel {
@@ -256,7 +256,7 @@ func (tr *Trainer) updateLatestModel(ctx context.Context, oldModel, newModel int
 		}
 
 		status.LatestModel = newModel
-		if err := tr.PersistentStore.SetOpaque(ctx, "TrainerStatus", "status", status); err != nil {
+		if err := tr.PersistentStore.Set(ctx, "TrainerStatus", "status", nil, status); err != nil {
 			return errors.Wrap(err, "")
 		}
 

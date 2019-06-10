@@ -28,7 +28,7 @@ func (l *Lister) GetExamples(ctx context.Context) (data.ExamplePredictions, erro
 	}
 	err = nil
 
-	err = l.PersistentStore.GetOpaque(ctx, storeExamplesKind, storeExamplesKey, &examples)
+	_, err = l.PersistentStore.Get(ctx, storeExamplesKind, storeExamplesKey, &examples)
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
@@ -77,7 +77,7 @@ func (l *Lister) UpdateExamples(ctx context.Context) (data.ExamplePredictions, e
 		examples = append(examples, example)
 	}
 
-	err = l.PersistentStore.SetOpaque(ctx, storeExamplesKind, storeExamplesKey, &examples)
+	err = l.PersistentStore.Set(ctx, storeExamplesKind, storeExamplesKey, nil, &examples)
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}

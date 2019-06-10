@@ -2,6 +2,7 @@ package pbook
 
 import (
 	"context"
+	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 )
 
@@ -12,8 +13,8 @@ type CacheStore interface {
 }
 
 type PersistentStore interface {
-	GetOpaque(ctx context.Context, kind, key string, v interface{}) error
-	SetOpaque(ctx context.Context, kind, key string, v interface{}) error
+	Get(ctx context.Context, kind, key string, v interface{}) ([]data.Property, error)
+	Set(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error
 }
 
 type PredictionSource interface {
