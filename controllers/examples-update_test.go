@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"net/http"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestExamplesUpdate_HandleFunc_Success(t *testing.T) {
 		calledOnSuccess = true
 	}
 
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -62,7 +63,7 @@ func TestExamplesUpdate_HandleFunc_ContextError(t *testing.T) {
 			t.Error("Expected non-nil error in OnContextError, got nil error")
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		return nil, errors.New("bluh")
 	}
@@ -102,7 +103,7 @@ func TestExamplesUpdate_HandleFunc_UpdateError(t *testing.T) {
 		}
 	}
 
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil

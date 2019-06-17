@@ -3,27 +3,9 @@ package controllers
 import (
 	"context"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"net/http"
 	"testing"
 	"time"
 )
-
-func newTestContextMaker(t *testing.T) *testContextMaker {
-	return &testContextMaker{
-		MakeContextFunc: func(r *http.Request) (context.Context, error) {
-			t.Error("MakeContextFunc should not be called")
-			return nil, nil
-		},
-	}
-}
-
-type testContextMaker struct {
-	MakeContextFunc func(r *http.Request) (context.Context, error)
-}
-
-func (cm *testContextMaker) MakeContext(r *http.Request) (context.Context, error) {
-	return cm.MakeContextFunc(r)
-}
 
 func newTestExamplesLister(t *testing.T) *testExamplesLister {
 	return &testExamplesLister{

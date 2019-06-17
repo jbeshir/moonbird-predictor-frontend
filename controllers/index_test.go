@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	predictions2 "github.com/jbeshir/predictionbook-extractor/predictions"
 	"net/http"
 	"net/url"
@@ -39,7 +40,7 @@ func TestIndex_HandleFunc_NoExamples_NoAssignments(t *testing.T) {
 			t.Errorf("Result PredictionErr should be nil, was %s", result.PredictionErr)
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -97,7 +98,7 @@ func TestIndex_HandleFunc_NoExamples_Assignments(t *testing.T) {
 			t.Errorf("Result PredictionErr should be nil, was %s", result.PredictionErr)
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -164,7 +165,7 @@ func TestIndex_HandleFunc_NoExamples_JunkAssignments(t *testing.T) {
 			t.Errorf("Result PredictionErr should be non-nil, was nil")
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -224,7 +225,7 @@ func TestIndex_HandleFunc_NoExamples_Assignments_PredictErr(t *testing.T) {
 			t.Errorf("Result PredictionErr should be non-nil, was nil")
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -291,7 +292,7 @@ func TestIndex_HandleFunc_ExamplesErr_NoAssignments(t *testing.T) {
 			t.Errorf("Result PredictionErr should be nil, was %s", result.PredictionErr)
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -361,7 +362,7 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 			t.Errorf("Result PredictionErr should be nil, was %s", result.PredictionErr)
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -441,7 +442,7 @@ func TestIndex_HandleFunc_ContextError(t *testing.T) {
 			t.Error("Expected non-nil error in OnContextError, got nil error")
 		}
 	}
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		return nil, errors.New("bluh")
 	}

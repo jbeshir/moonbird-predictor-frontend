@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"net/http"
 	"testing"
 	"time"
@@ -42,7 +43,7 @@ func TestModelRetrain_HandleFunc_Success(t *testing.T) {
 		calledOnSuccess = true
 	}
 
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -90,7 +91,7 @@ func TestModelRetrain_HandleFunc_Error(t *testing.T) {
 		}
 	}
 
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		createdContext = context.Background()
 		return createdContext, nil
@@ -122,7 +123,7 @@ func TestModelRetrain_HandleFunc_ContextError(t *testing.T) {
 		}
 	}
 
-	cm := newTestContextMaker(t)
+	cm := testhelpers.NewContextMaker(t)
 	cm.MakeContextFunc = func(r *http.Request) (i context.Context, e error) {
 		return nil, errors.New("bluh")
 	}
