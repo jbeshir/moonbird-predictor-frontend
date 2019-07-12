@@ -3,7 +3,7 @@ package responders
 import (
 	"context"
 	"fmt"
-	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
+	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
 	"net/http"
 )
 

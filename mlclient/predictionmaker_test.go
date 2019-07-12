@@ -2,7 +2,7 @@ package mlclient
 
 import (
 	"context"
-	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
+	"github.com/jbeshir/moonbird-auth-frontend/testhelpers"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
+	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
 	"strings"

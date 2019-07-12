@@ -2,8 +2,10 @@ package pbook
 
 import (
 	"context"
-	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
+	"github.com/jbeshir/moonbird-auth-frontend/data"
+	"github.com/jbeshir/moonbird-auth-frontend/testhelpers"
+	data2 "github.com/jbeshir/moonbird-predictor-frontend/data"
+	testhelpers2 "github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"github.com/pkg/errors"
 	"reflect"
@@ -15,14 +17,14 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
 		PersistentStore:  ps,
 	}
 
-	example := data.ExamplePrediction{
+	example := data2.ExamplePrediction{
 		PredictionSummary: &predictions.PredictionSummary{
 			Id: 7,
 		},
@@ -33,11 +35,11 @@ func TestLister_GetExamples_FromCache(t *testing.T) {
 			t.Errorf("Reading from wrong cache key; expected %s, was %s", cacheExamplesKey, key)
 		}
 
-		examples, valid := v.(*data.ExamplePredictions)
+		examples, valid := v.(*data2.ExamplePredictions)
 		if !valid {
 			t.Errorf("Cache reading wrong type; expected *data.ExamplePredictions")
 		} else {
-			*examples = []data.ExamplePrediction{example}
+			*examples = []data2.ExamplePrediction{example}
 		}
 
 		return nil
@@ -62,19 +64,19 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
 		PersistentStore:  ps,
 	}
 
-	example := data.ExamplePrediction{
+	example := data2.ExamplePrediction{
 		PredictionSummary: &predictions.PredictionSummary{
 			Id: 7,
 		},
 	}
-	testExamples := data.ExamplePredictions([]data.ExamplePrediction{example})
+	testExamples := data2.ExamplePredictions([]data2.ExamplePrediction{example})
 
 	setCallCount := 0
 	cs.GetFunc = func(ctx context.Context, key string, v interface{}) error {
@@ -85,7 +87,7 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 			t.Errorf("Setting wrong cache key; expected %s, was %s", cacheExamplesKey, key)
 		}
 
-		examples, valid := v.(*data.ExamplePredictions)
+		examples, valid := v.(*data2.ExamplePredictions)
 		if !valid {
 			t.Errorf("Cache setting wrong type; expected *data.ExamplePredictions")
 		} else {
@@ -105,7 +107,7 @@ func TestLister_GetExamples_FromStore(t *testing.T) {
 			t.Errorf("Reading from wrong store key; expected %s, was %s", storeExamplesKey, key)
 		}
 
-		examples, valid := v.(*data.ExamplePredictions)
+		examples, valid := v.(*data2.ExamplePredictions)
 		if !valid {
 			t.Errorf("Store reading wrong type; expected *data.ExamplePredictions")
 		} else {
@@ -134,7 +136,7 @@ func TestLister_GetExamples_FromStoreErr(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,

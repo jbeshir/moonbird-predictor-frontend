@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"context"
-	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
+	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"net/http"

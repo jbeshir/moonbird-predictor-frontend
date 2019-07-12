@@ -3,8 +3,9 @@ package mlclient
 import (
 	"context"
 	"encoding/json"
-	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
+	"github.com/jbeshir/moonbird-auth-frontend/data"
+	"github.com/jbeshir/moonbird-auth-frontend/testhelpers"
+	testhelpers2 "github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"google.golang.org/api/ml/v1"
 	"io/ioutil"
@@ -175,7 +176,7 @@ func TestTrainer_Retrain(t *testing.T) {
 		return nil
 	}
 
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	s.AllPredictionsSinceFunc = func(context context.Context, since time.Time) (summaries []*predictions.PredictionSummary, e error) {
 		wantTime := time.Unix(123, 0)
 		if since != wantTime {
@@ -466,7 +467,7 @@ func TestTrainer_RetrieveNewAndOutstanding(t *testing.T) {
 		return []byte("2,2,300,0.49,6,0,Person1,Deadline Due 1\n5,2,400,0.49,6,0,Person2,Deadline Due 2\n10,2,1000,0.96,2,0,Person3,Deadline Not Due"), nil
 	}
 
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	s.AllPredictionsSinceFunc = func(context context.Context, since time.Time) (summaries []*predictions.PredictionSummary, e error) {
 		wantTime := time.Unix(123, 0)
 		if since != wantTime {
@@ -553,7 +554,7 @@ func TestTrainer_RetrieveNewAndOutstanding_Deduplicate(t *testing.T) {
 		return []byte("5,2,300,0.49,6,0,Person1,Deadline Due 1\n5,2,400,0.49,6,0,Person2,Deadline Due 2\n10,2,1000,0.96,2,0,Person3,Deadline Not Due"), nil
 	}
 
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	s.AllPredictionsSinceFunc = func(context context.Context, since time.Time) (summaries []*predictions.PredictionSummary, e error) {
 		wantTime := time.Unix(123, 0)
 		if since != wantTime {

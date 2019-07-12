@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
+	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"

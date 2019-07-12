@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jbeshir/moonbird-predictor-frontend/aengine"
+	"github.com/jbeshir/moonbird-auth-frontend/aengine"
 	"github.com/jbeshir/moonbird-predictor-frontend/controllers"
 	"github.com/jbeshir/moonbird-predictor-frontend/mlclient"
 	"github.com/jbeshir/moonbird-predictor-frontend/pbook"

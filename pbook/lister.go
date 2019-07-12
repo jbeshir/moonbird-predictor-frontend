@@ -2,7 +2,7 @@ package pbook
 
 import (
 	"context"
-	"github.com/jbeshir/moonbird-predictor-frontend/ctxlogrus"
+	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"github.com/pkg/errors"

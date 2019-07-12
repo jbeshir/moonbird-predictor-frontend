@@ -3,8 +3,10 @@ package pbook
 import (
 	"context"
 	"errors"
-	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
+	"github.com/jbeshir/moonbird-auth-frontend/data"
+	"github.com/jbeshir/moonbird-auth-frontend/testhelpers"
+	data2 "github.com/jbeshir/moonbird-predictor-frontend/data"
+	testhelpers2 "github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
 	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"math"
 	"reflect"
@@ -16,7 +18,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -68,7 +70,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 	}
 
 	storeSetCallCount := 0
-	var storeSetExamples data.ExamplePredictions
+	var storeSetExamples data2.ExamplePredictions
 	ps.SetFunc = func(ctx context.Context, kind, key string, properties []data.Property, v interface{}) error {
 		if kind != storeExamplesKind {
 			t.Errorf("Writing to wrong store kind; expected %s, was %s", storeExamplesKind, kind)
@@ -77,7 +79,7 @@ func TestLister_UpdateExamples(t *testing.T) {
 			t.Errorf("Writing to wrong store key; expected %s, was %s", storeExamplesKey, key)
 		}
 
-		examples, valid := v.(*data.ExamplePredictions)
+		examples, valid := v.(*data2.ExamplePredictions)
 		if !valid {
 			t.Errorf("Store writing wrong type; expected *data.ExamplePredictions")
 		} else {
@@ -137,7 +139,7 @@ func TestLister_UpdateExamples_SummariesErr(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -163,7 +165,7 @@ func TestLister_UpdateExamples_ResponsesErr(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,
@@ -197,7 +199,7 @@ func TestLister_UpdateExamples_StoreErr(t *testing.T) {
 
 	ps := testhelpers.NewPersistentStore(t)
 	cs := testhelpers.NewCacheStore(t)
-	s := testhelpers.NewPredictionSource(t)
+	s := testhelpers2.NewPredictionSource(t)
 	lister := &Lister{
 		PredictionSource: s,
 		CacheStore:       cs,

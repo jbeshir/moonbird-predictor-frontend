@@ -1,19 +1,25 @@
 module github.com/jbeshir/moonbird-predictor-frontend
 
 require (
-	cloud.google.com/go v0.34.0
+	cloud.google.com/go v0.41.0
+	git.apache.org/thrift.git v0.0.0-20181218151757-9b75e4fe745a // indirect
 	github.com/PuerkitoBio/goquery v1.5.0
-	github.com/google/martian v2.1.0+incompatible // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.6.2 // indirect
+	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190708061726-e7d7eb877452
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
-	github.com/pkg/errors v0.8.0
-	github.com/sirupsen/logrus v1.3.0
-	go.opencensus.io v0.19.0 // indirect
-	golang.org/x/net v0.0.0-20181217023233-e147a9138326
-	golang.org/x/oauth2 v0.0.0-20181203162652-d668ce993890
-	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c
-	google.golang.org/api v0.0.0-20181220000619-583d854617af
-	google.golang.org/appengine v1.3.0
-	google.golang.org/genproto v0.0.0-20190201180003-4b09977fb922 // indirect
-	google.golang.org/grpc v1.18.0 // indirect
+	github.com/kisielk/gotool v1.0.0 // indirect
+	github.com/openzipkin/zipkin-go v0.1.3 // indirect
+	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v0.9.2 // indirect
+	github.com/prometheus/common v0.0.0-20181218105931-67670fe90761 // indirect
+	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
+	google.golang.org/api v0.7.0
+	google.golang.org/appengine v1.6.1
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

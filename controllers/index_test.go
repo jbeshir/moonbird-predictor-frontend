@@ -3,9 +3,9 @@ package controllers
 import (
 	"context"
 	"errors"
+	"github.com/jbeshir/moonbird-auth-frontend/testhelpers"
 	"github.com/jbeshir/moonbird-predictor-frontend/data"
-	"github.com/jbeshir/moonbird-predictor-frontend/testhelpers"
-	predictions2 "github.com/jbeshir/predictionbook-extractor/predictions"
+	"github.com/jbeshir/predictionbook-extractor/predictions"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -47,7 +47,7 @@ func TestIndex_HandleFunc_NoExamples_NoAssignments(t *testing.T) {
 	}
 
 	var calledGetExamples bool
-	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
+	l.GetExamplesFunc = func(ctx context.Context) (preds data.ExamplePredictions, e error) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
@@ -104,17 +104,17 @@ func TestIndex_HandleFunc_NoExamples_Assignments(t *testing.T) {
 		return createdContext, nil
 	}
 
-	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
+	l.GetExamplesFunc = func(ctx context.Context) (preds data.ExamplePredictions, e error) {
 		return nil, nil
 	}
 
 	var calledPredict bool
-	pm.PredictFunc = func(ctx context.Context, predictions []float64) (p float64, err error) {
+	pm.PredictFunc = func(ctx context.Context, preds []float64) (p float64, err error) {
 		calledPredict = true
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if !reflect.DeepEqual(predictions, []float64{0.1, 0.2}) {
+		if !reflect.DeepEqual(preds, []float64{0.1, 0.2}) {
 			t.Error("Unexpected prediction values")
 		}
 		return 0.17, nil
@@ -172,7 +172,7 @@ func TestIndex_HandleFunc_NoExamples_JunkAssignments(t *testing.T) {
 	}
 
 	var calledGetExamples bool
-	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
+	l.GetExamplesFunc = func(ctx context.Context) (preds data.ExamplePredictions, e error) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
@@ -231,17 +231,17 @@ func TestIndex_HandleFunc_NoExamples_Assignments_PredictErr(t *testing.T) {
 		return createdContext, nil
 	}
 
-	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
+	l.GetExamplesFunc = func(ctx context.Context) (preds data.ExamplePredictions, e error) {
 		return nil, nil
 	}
 
 	var calledPredict bool
-	pm.PredictFunc = func(ctx context.Context, predictions []float64) (p float64, err error) {
+	pm.PredictFunc = func(ctx context.Context, preds []float64) (p float64, err error) {
 		calledPredict = true
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
-		if !reflect.DeepEqual(predictions, []float64{0.1, 0.2}) {
+		if !reflect.DeepEqual(preds, []float64{0.1, 0.2}) {
 			t.Error("Unexpected prediction values")
 		}
 		return 0, errors.New("bluh")
@@ -369,20 +369,20 @@ func TestIndex_HandleFunc_Examples_NoAssignments(t *testing.T) {
 	}
 
 	var calledGetExamples bool
-	l.GetExamplesFunc = func(ctx context.Context) (predictions data.ExamplePredictions, e error) {
+	l.GetExamplesFunc = func(ctx context.Context) (preds data.ExamplePredictions, e error) {
 		if ctx == nil {
 			t.Error("Got nil context, expected non-nil context")
 		}
 		calledGetExamples = true
 		return []data.ExamplePrediction{
 			{
-				PredictionSummary: &predictions2.PredictionSummary{
+				PredictionSummary: &predictions.PredictionSummary{
 					Title: "bluh",
 				},
 				Assignments: []float64{0.5, 0.7},
 			},
 			{
-				PredictionSummary: &predictions2.PredictionSummary{
+				PredictionSummary: &predictions.PredictionSummary{
 					Title: "bluh2",
 				},
 				Assignments: []float64{0.3, 0.4},
