@@ -1,8 +1,8 @@
 steps:
 - name: "gcr.io/cloud-builders/gcloud"
-  args: ["app", "deploy"'app.yaml', '--version=$SHORT_SHA', '--promote']
+  args: ["app", "deploy", 'app.yaml', '--version=$SHORT_SHA', '--promote']
 - name: "gcr.io/cloud-builders/gcloud"
-  args: ["app", "deploy"'app-frontend.yaml', '--version=$SHORT_SHA', '--promote']
+  args: ["app", "deploy", 'app-frontend.yaml', '--version=$SHORT_SHA', '--promote']
 - name: "gcr.io/cloud-builders/gcloud"
-  args: ["app", "deploy"'app-cron.yaml', '--version=$SHORT_SHA', '--promote']
+  args: ["app", "deploy", 'app-cron.yaml', '--version=$SHORT_SHA', '--promote']
 timeout: "4800s"
