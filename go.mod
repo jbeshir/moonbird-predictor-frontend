@@ -7,7 +7,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.6.2 // indirect
-	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190708061726-e7d7eb877452
+	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190829175742-23394f8e6719
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/openzipkin/zipkin-go v0.1.3 // indirect
@@ -19,7 +19,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	google.golang.org/api v0.9.0
-	google.golang.org/appengine v1.6.1
+	google.golang.org/appengine v1.6.2
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
