@@ -7,7 +7,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.6.2 // indirect
-	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190708061726-e7d7eb877452
+	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190829175742-23394f8e6719
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/openzipkin/zipkin-go v0.1.3 // indirect
