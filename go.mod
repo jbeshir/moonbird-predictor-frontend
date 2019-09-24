@@ -1,7 +1,7 @@
 module github.com/jbeshir/moonbird-predictor-frontend
 
 require (
-	cloud.google.com/go v0.44.3
+	cloud.google.com/go v0.46.3
 	git.apache.org/thrift.git v0.0.0-20181218151757-9b75e4fe745a // indirect
 	github.com/PuerkitoBio/goquery v1.5.0
 	github.com/ghodss/yaml v1.0.0 // indirect
