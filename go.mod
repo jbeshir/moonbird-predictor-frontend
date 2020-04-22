@@ -3,7 +3,7 @@ module github.com/jbeshir/moonbird-predictor-frontend
 require (
 	cloud.google.com/go v0.56.0
 	git.apache.org/thrift.git v0.0.0-20181218151757-9b75e4fe745a // indirect
-	github.com/PuerkitoBio/goquery v1.5.0
+	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.6.2 // indirect
