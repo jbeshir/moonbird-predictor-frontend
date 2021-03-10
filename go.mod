@@ -1,7 +1,7 @@
 module github.com/jbeshir/moonbird-predictor-frontend
 
 require (
-	cloud.google.com/go v0.77.0
+	cloud.google.com/go v0.78.0
 	git.apache.org/thrift.git v0.0.0-20181218151757-9b75e4fe745a // indirect
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -15,8 +15,8 @@ require (
 	github.com/prometheus/common v0.0.0-20181218105931-67670fe90761 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	golang.org/x/net v0.0.0-20210119194325-5f4716e94777
-	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
+	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/api v0.40.0
+	google.golang.org/api v0.41.0
 	google.golang.org/appengine v1.6.7
 )
