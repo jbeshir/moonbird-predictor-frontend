@@ -817,12 +817,12 @@ func TestTrainer_JobSpec(t *testing.T) {
 		t.Errorf("Expected python module %s, got %s", wantPythonModule, jobSpec.TrainingInput.PythonModule)
 	}
 
-	wantPythonVersion := "3.5"
+	wantPythonVersion := "3.7"
 	if jobSpec.TrainingInput.PythonVersion != wantPythonVersion {
 		t.Errorf("Expected python version %s, got %s", wantPythonVersion, jobSpec.TrainingInput.PythonVersion)
 	}
 
-	wanRuntimeVersion := "1.12"
+	wanRuntimeVersion := "2.4.0"
 	if jobSpec.TrainingInput.RuntimeVersion != wanRuntimeVersion {
 		t.Errorf("Expected runtime version %s, got %s", wanRuntimeVersion, jobSpec.TrainingInput.RuntimeVersion)
 	}
