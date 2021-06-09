@@ -311,8 +311,8 @@ func (tr *Trainer) newTrainJobSpec(oldModel, newModel int64) *ml.GoogleCloudMlV1
 		TrainingInput: &ml.GoogleCloudMlV1__TrainingInput{
 			JobDir:         "gs://" + tr.ModelPath + "/" + strconv.FormatInt(newModel, 10) + "/",
 			PythonModule:   "trainer.train",
-			PythonVersion:  "3.5",
-			RuntimeVersion: "1.12",
+			PythonVersion:  "3.7",
+			RuntimeVersion: "2.4.0",
 			Args: []string{
 				"--train-file",
 				"gs://" + tr.DataPath + "/" + strconv.FormatInt(newModel, 10) + "/",
