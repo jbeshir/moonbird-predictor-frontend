@@ -822,7 +822,7 @@ func TestTrainer_JobSpec(t *testing.T) {
 		t.Errorf("Expected python version %s, got %s", wantPythonVersion, jobSpec.TrainingInput.PythonVersion)
 	}
 
-	wanRuntimeVersion := "2.4.0"
+	wanRuntimeVersion := "2.4"
 	if jobSpec.TrainingInput.RuntimeVersion != wanRuntimeVersion {
 		t.Errorf("Expected runtime version %s, got %s", wanRuntimeVersion, jobSpec.TrainingInput.RuntimeVersion)
 	}
