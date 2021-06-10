@@ -868,7 +868,7 @@ func TestTrainer_VersionSpec(t *testing.T) {
 		t.Errorf("Expected version URI %s, got %s", wantDeploymentUri, versionSpec.DeploymentUri)
 	}
 
-	wanRuntimeVersion := "1.12"
+	wanRuntimeVersion := "2.4"
 	if versionSpec.RuntimeVersion != wanRuntimeVersion {
 		t.Errorf("Expected runtime version %s, got %s", wanRuntimeVersion, versionSpec.RuntimeVersion)
 	}

@@ -333,7 +333,7 @@ func (tr *Trainer) newTrainVersionSpec(model int64) *ml.GoogleCloudMlV1__Version
 	return &ml.GoogleCloudMlV1__Version{
 		Name:           "v" + strconv.FormatInt(model, 10),
 		DeploymentUri:  "gs://" + tr.ModelPath + "/" + strconv.FormatInt(model, 10) + "/saved_model/",
-		RuntimeVersion: "1.12",
+		RuntimeVersion: "2.4",
 	}
 }
 
