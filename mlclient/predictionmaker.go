@@ -1,7 +1,9 @@
 package mlclient
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"github.com/jbeshir/moonbird-auth-frontend/ctxlogrus"
@@ -29,6 +31,7 @@ func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (
 	if err == nil {
 		return
 	}
+	l.Info("Can't read prediction from cache: " + err.Error())
 
 	client, err := pm.HttpClientMaker.MakeClient(ctx)
 	if err != nil {
@@ -56,7 +59,10 @@ func (pm *PredictionMaker) Predict(ctx context.Context, predictions []float64) (
 	p = result.Predictions[0].Income[0]
 
 	// We ignore failures in writing to cache.
-	pm.CacheStorage.Set(ctx, cacheKey, &p)
+	cacheWriteErr := pm.CacheStorage.Set(ctx, cacheKey, &p)
+	if cacheWriteErr != nil {
+		l.Warn("Can't write prediction to cache: " + cacheWriteErr.Error())
+	}
 
 	return
 }
@@ -110,9 +116,9 @@ func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, e
 }
 
 func generatePredictionCacheKey(predictions []float64) string {
-	var buf strings.Builder
+	var buf bytes.Buffer
 	for _, p := range predictions {
 		binary.Write(&buf, binary.BigEndian, p)
 	}
-	return buf.String()
+	return base64.StdEncoding.EncodeToString(buf.Bytes())
 }

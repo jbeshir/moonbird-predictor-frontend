@@ -3,7 +3,7 @@ module github.com/jbeshir/moonbird-predictor-frontend
 go 1.16
 
 require (
-	github.com/PuerkitoBio/goquery v1.6.1
+	github.com/PuerkitoBio/goquery v1.7.0
 	github.com/jbeshir/moonbird-auth-frontend v0.0.0-20190829175742-23394f8e6719
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
 	github.com/pkg/errors v0.9.1
