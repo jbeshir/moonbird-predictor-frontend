@@ -49,7 +49,7 @@ func TestGeneratePredictionCacheKey(t *testing.T) {
 	t.Parallel()
 
 	key := generatePredictionCacheKey([]float64{0.4, 0.1})
-	expectedKey := "P9mZmZmZmZo/uZmZmZmZmg=="
+	expectedKey := "Fkrv+y+ZpLY+nq+1irp6jB4K5r6GaSHGnT0pbnWS50dZ5erOiuh6vw/l4vMOX6utlV88bh7JfSHmiEa4aVFSbA=="
 	if key != expectedKey {
 		t.Errorf("Incorrect generated prediction cache key; expected %v, was %v", expectedKey, key)
 	}

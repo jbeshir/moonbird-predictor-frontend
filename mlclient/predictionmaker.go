@@ -1,7 +1,6 @@
 package mlclient
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/binary"
@@ -10,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/api/ml/v1"
 	"strings"
+
+	"golang.org/x/crypto/sha3"
 )
 
 type PredictionMaker struct {
@@ -116,9 +117,9 @@ func newMLRequest(predictions []float64) (*ml.GoogleCloudMlV1__PredictRequest, e
 }
 
 func generatePredictionCacheKey(predictions []float64) string {
-	var buf bytes.Buffer
+	hash := sha3.New512()
 	for _, p := range predictions {
-		binary.Write(&buf, binary.BigEndian, p)
+		binary.Write(hash, binary.BigEndian, p)
 	}
-	return base64.StdEncoding.EncodeToString(buf.Bytes())
+	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
