@@ -8,7 +8,8 @@ require (
 	github.com/jbeshir/predictionbook-extractor v0.0.0-20190213040432-8da3da8fe604
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
-	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
+	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/api v0.42.0
 	google.golang.org/appengine v1.6.7
